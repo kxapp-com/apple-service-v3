@@ -6,7 +6,7 @@ import (
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
-	gsasrp2 "github.com/appuploader/apple-service-v3/xcode/gsa/gsasrp"
+	"github.com/appuploader/apple-service-v3/xcode/gsa"
 	"github.com/google/uuid"
 	//gsasrp2 "github.com/kxapp-com/apple-service/pkg/gsa/gsasrp"
 	log "github.com/sirupsen/logrus"
@@ -159,7 +159,7 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 	if client.anisseteData == nil {
 		return &httpz.HttpResponse{Error: errors.New("Load required data fail")}
 	}
-	gsasrp2.AddAnisseteHeaders(client.anisseteData, headers)
+	gsa.AddAnisseteHeaders(client.anisseteData, headers)
 	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
 	protocolStruct := map[string]any{"clientId": "XABBG36SBA", "protocolVersion": "QH65B2", "requestId": uuid.New().String()}
 	requestBody, _ := plist.Marshal(protocolStruct, plist.XMLFormat)
@@ -205,7 +205,7 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 		//return ParsedResponse{Status: ee.Error()}
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
-	spd, status := gsasrp2.NewSrpGsaClient(client.AuthInfo.Email, client.AuthInfo.Password, anissete).Login()
+	spd, status := gsa.NewSrpGsaClient(client.AuthInfo.Email, client.AuthInfo.Password, anissete).Login()
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
 		//return status.AsStatusResult()
@@ -226,7 +226,7 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 		//	return errorz.SuccessStatusResult(res.TrustedPhoneNumbers)
 		//}
 	} else if spd.StatusCode == http.StatusOK {
-		xt, e := gsasrp2.FetchXCodeToken(spd, anissete)
+		xt, e := gsa.FetchXCodeToken(spd, anissete)
 		if e != nil {
 			log.Error("get xcode token error", e)
 			//return e.AsStatusResult()

@@ -1,4 +1,4 @@
-package gsasrp
+package gsa
 
 import (
 	"encoding/base64"

@@ -1,4 +1,4 @@
-package gsasrp
+package gsa
 
 import (
 	"gitee.com/kxapp/kxapp-common/errorz"

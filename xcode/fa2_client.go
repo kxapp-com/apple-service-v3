@@ -6,7 +6,7 @@ import (
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/utilz"
 	"github.com/appuploader/apple-service-v3/appuploader"
-	"github.com/appuploader/apple-service-v3/xcode/gsa/gsasrp"
+	"github.com/appuploader/apple-service-v3/xcode/gsa"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -22,7 +22,7 @@ type Fa2Client struct {
 func NewXcodeFa2Client2(httpclient *http.Client, appleIdToken string, data *appuploader.AnisseteData) *Fa2Client {
 	client := &Fa2Client{httpClient: httpclient}
 	client.serverURL = "https://gsa.apple.com/auth"
-	client.headers = gsasrp.AddAnisseteHeaders(data, xcodeStep2Header())
+	client.headers = gsa.AddAnisseteHeaders(data, xcodeStep2Header())
 	client.headers["X-Apple-Identity-Token"] = appleIdToken
 	return client
 }
@@ -39,7 +39,7 @@ func NewXcodeFa2Client2(httpclient *http.Client, appleIdToken string, data *appu
 //		return client
 //	}
 func (client *Fa2Client) SetAnisetteData(data *appuploader.AnisseteData) {
-	client.headers = gsasrp.AddAnisseteHeaders(data, xcodeStep2Header())
+	client.headers = gsa.AddAnisseteHeaders(data, xcodeStep2Header())
 }
 
 //func (client *Fa2Client) isGsaFa2Client() bool {
