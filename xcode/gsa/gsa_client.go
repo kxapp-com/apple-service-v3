@@ -23,9 +23,9 @@ const APP_BUNDLE_ID_XCODE = "com.apple.gs.xcode.auth"
 
 // var XMmeClientInfo string = "<MacBookPro17,1> <macOS;12.2.1;21D62> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>" //work good
 var XMmeClientInfo string // "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>" //work good
-// SrpGsaClient apple gsa login
-type SrpGsaClient struct {
-	Exchange hash.Hash
+// GsaClient apple gsa login
+type GsaClient struct {
+	ExchangeHashFun hash.Hash
 	//Proto     []string
 	sRPClient *srp.SRPClient
 	UserName  string
@@ -40,12 +40,12 @@ udid X-Mme-Device-Id  MobileMe Device Identifier
 imd X-Apple-I-MD Machine Data, One Time Password (OTP)
 imdm X-Apple-I-MD-M Machine Data, Machine Information
 */
-func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) *SrpGsaClient {
-	context := new(SrpGsaClient)
+func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) *GsaClient {
+	context := new(GsaClient)
 	context.sRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	context.UserName = username
 	context.Password = password
-	context.Exchange = sha256.New()
+	context.ExchangeHashFun = sha256.New()
 	XMmeClientInfo = data.XMmeClientInfo
 
 	rinfo, _ := strconv.Atoi(data.XAppleIMDRINFO)
@@ -84,7 +84,7 @@ func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) 
 得到spd表示密码校验成功，后面可用使用spd里面的token开始二次校验登录或者获取其他的token
 如果hsc=434表示 anissete 已经过期，如果是433则表示需要reprovision设备了,409表示需要2次校验，200表示成功
 */
-func (gsaSession *SrpGsaClient) Login() (*ServerProvidedData, *errorz.StatusError) {
+func (gsaSession *GsaClient) Login() (*ServerProvidedData, *errorz.StatusError) {
 	resp, e := gsaSession.RequestInitForB()
 	if e != nil {
 		return nil, e
@@ -112,7 +112,7 @@ func (gsaSession *SrpGsaClient) Login() (*ServerProvidedData, *errorz.StatusErro
 *
 登录的第一个请求，发送init请求SRP的B值
 */
-func (gsaSession *SrpGsaClient) RequestInitForB() (*GSAInitResponse, *errorz.StatusError) {
+func (gsaSession *GsaClient) RequestInitForB() (*GSAInitResponse, *errorz.StatusError) {
 	req := GSAInitRequest{A2K: gsaSession.sRPClient.GetA(), CPD: gsaSession.CPD, ProtoStyle: []string{"s2k", "s2k_fo"}, UserName: gsaSession.UserName, Operation: "init"}
 	//对请求参数进行hash
 	for i, name := range req.ProtoStyle {
@@ -129,7 +129,7 @@ func (gsaSession *SrpGsaClient) RequestInitForB() (*GSAInitResponse, *errorz.Sta
 }
 
 // CalculateM1 登录的第二步 , 根据第一步返回的B值计算M1值
-func (gsaSession *SrpGsaClient) CalculateM1(resp *GSAInitResponse) []byte {
+func (gsaSession *GsaClient) CalculateM1(resp *GSAInitResponse) []byte {
 	salt := resp.Salt
 	iter := resp.IterationCount
 	nots2k := true
@@ -147,7 +147,7 @@ func (gsaSession *SrpGsaClient) CalculateM1(resp *GSAInitResponse) []byte {
 可用解密除spd数据，此请求返回结果中的spd是已经解密的可用被plist解码为ServerProvicedData的二进制了。得到spd表示srp密码校验完成。并获得了临时token。
 临时token可用给后面二次校验使用，或者用于获取后面的业务逻辑token
 */
-func (gsaSession *SrpGsaClient) RequestCompleteForM2(m1 []byte, cookie string, selectedProtocol string) (*GSACompleteResponse, *errorz.StatusError) {
+func (gsaSession *GsaClient) RequestCompleteForM2(m1 []byte, cookie string, selectedProtocol string) (*GSACompleteResponse, *errorz.StatusError) {
 	req := GSACompleteRequest{CPD: *gsaSession.CPD, M1: m1, Cookie: cookie, UserName: gsaSession.UserName, Operation: "complete"}
 	//对请求的参数进行hash
 	gsaSession.updateNegString("|")
@@ -186,7 +186,7 @@ DecryptSPD 解密Server Provided Data	User token information, AES-CBC encrypted 
  * descripted spd sample <dict><key>authmode</key><integer>1</integer><key>acname</key><string>877028320@qq.com</string><key>c</key><data>YjljNTMwNDQtYmU1My00YjhmLTg0ZGEtODNkOGMwODQzMDEwNFEyYWlCOFpDSkw0clBhVmpnUDlZeGowVHJXMnNsRzNsY0ZoYjViejNxbCt6U2E5dWVzSVJENnNhbVJ0amVJaVpLcUt1Rnk0K3gydjE4R1d6eDNnSy8xaXkxdnJWbWZucTh6OFZaK1dMWjlWdEMrRnZOTWNVQUMwZXdTYWQ0V0pXRnBI</data><key>primaryEmailVetted</key><integer>1</integer><key>adsid</key><string>000139-10-7621bc09-3475-43e5-a1b4-f9c035e0b1b2</string><key>duration</key><integer>3600</integer><key>GsIdmsToken</key><string>AAAABLwIAAAAAGBN6cARDGdzLmlkbXMuYXV0aL0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHDGrjS6aor1oOLs17ext+qa4YbWdICjSEzsOr9hg6DB4qq4+CQ=</string><key>status-code</key><integer>200</integer><key>t</key><dict><key>com.apple.gs.idms.pet</key><dict><key>duration</key><integer>300</integer><key>expiry</key><integer>1615719148291</integer><key>token</key><string>GaUHSTg9TTls64YOriOsXd7hYxfVECmnI++6JulBivJyWBkNirpmqTFtzTeJiOhImOGQiGC4cH1H0ccygEmzs9pL/4b8PjW+15qnIBvrSIq38Dv/YHoOgvDZr24Lc66WLfiHaFGL3X18jTlrSRH0JGocl8rviGWdqp9GNZtVvBeZSyEIXnvvS9j8X6ypjYVh/QhevcD+NEVTDNeE9fEBXUwvhcuqNXuv9tk4E4oGSSIDpU+Qk0xdNldaVE6TKyDaDqTvt9bxluQfdAuza9hKAZg2E4upecojaKvvYwgvSc+IDErGWeT1X8vwUcG3hV2Jk/LBowboVunHaCk0VnpZfUInYykwHHI6/iFmpVVwjPaNeuTLrpCjgrNCQi0De/pUWw6tGio=PET</string></dict><key>com.apple.gs.icloud.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>GaUHSTg9TTls64YOriOsXd4pHC4OQ7W9PNfsEKGj8IP+CY+6zfy+2HLGDJnCqgPI05Nzoy2Nb3GS6Q73zQIbE1OLy99CpCl0gzbsUCjfnopudTRcfXA4xsHSbi6qF4h0RHOZLxBOSJy1TiBUNMuRxPLSBW5uQYaCGPUzsUF/0Vw6vW6HYRLjVLDkIvFWScmZZ5pqsJABgu11UMJCKtReG+GJ8Ls114FD+d8Q69Xf74qwxG0ImjA6Q2SOcjUFVIMYpTO7QKjMkAfkYe10G7X2R/7YX7mjhoeuxh3dMpYDFoWLoJbH3SvzxF2aRxnPGl8znL/iO4pX/vJ8I1Jp+QNBpBlqQrphxaUcV7xP2ozfEG9M+0p6kRQHUL3p7kbdPQ015mrBMvM=</string></dict><key>com.apple.gs.appleid.auth</key><dict><key>duration</key><integer>3600</integer><key>expiry</key><integer>1615722448291</integer><key>token</key><string>GaUHSTg9TTls64YOriOsXd7hPmYynNw9WEqGiYDftkfY/S6bYlZo6xNyPwjAzSGXcXOCai3U17eSu9UnSbanpPLAINW2BurtnXWQ3mPHKGnP/+65E+SJhJbDIBh4sR6BQwqCeZV/vIVTOPmgI3KsM97OU5uYjEM9Od6jsKC8/KQtrJCMNOlCM/RsMkiPHsADies4QZ2cHHrCLdwVpEkt3k5b+ksGcEH87I29Fs4LJeWTnO+W/+LEx9BhaBuDjJwq057TZ19kDMm2r1r/sjKOocMK+X3J8YjIz9hGm7y1AcUhZxFdcSkLPx85eTA7wOcGBjfFhMESDdkJjo9RLmak4HY6YtbNvr9vvJn8pN+jhSWeNU1CJ5av9nT3kdt+YX0T/dzZprY=</string></dict><key>com.apple.gs.idms.hb</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARCmdzLmlkbXMuaGK9AEMB5J+tgMdF/rcCj+IM1rf0Tne64z7BWBknyjG8eAuwXb+rOKdtArekzNnXdnpjnKiMIysekZ2P5VDKQt8XhoH9UiEMus8pN9dre1nYOd7kgwQmG9pjlSnQS/4ZNP8gYLdN7gy73sJXwyAm1yliIKN4BC3kJZOBf+tABqsrZ4RwCbZ6CPt9/sg3cPRsrfpnxgMV0MRp10xuR2R7cdg7+pCFiBVj</string></dict><key>com.apple.gs.pb.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARCmdzLnBiLmF1dGi9AEMB5J+tgMdF/rcCj+IM1rf0Tne64z7BWBknyjG8eAuwXb+rOKdtArekzNnXdnpjnKiMIysekZ2P5VDKQt8XhoH9UiEMus8pN9dre1nYOd7kgwQmG9pjlSnQS/4ZNP8gYLdN7gy73sJXwyAm1yliIKN4BC3kJZOBf+tABqsrZ4RwyilTNJYhoPMLbIQtzsk8alYgUnaCKzbqh6Jno+qoZk0j4ZWs</string></dict><key>com.apple.gs.idms.ln</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARCmdzLmlkbXMubG69AEMB5J+tgMdF/rcCj+IM1rf0Tne64z7BWBknyjG8eAuwXb+rOKdtArekzNnXdnpjnKiMIysekZ2P5VDKQt8XhoH9UiEMus8pN9dre1nYOd7kgwQmG9pjlSnQS/4ZNP8gYLdN7gy73sJXwyAm1yliIKN4BC3kJZOBf+tABqsrZ4Rwq3l878eYOqDr51Sh3c0vPFwLqB7sZdle1SopIQ+NtnMUGoIl</string></dict><key>com.apple.gs.supportapp.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cAREmdzLnN1cHBvcnRhcHAuYXV0aL0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHAA7RGAAGMcdnmw8y3Vgcb1VFu2dTYW7EYGaOO6Pk0DfzQFUFE=</string></dict><key>com.apple.gs.global.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARDmdzLmdsb2JhbC5hdXRovQBDAeSfrYDHRf63Ao/iDNa39E53uuM+wVgZJ8oxvHgLsF2/qzinbQK3pMzZ13Z6Y5yojCMrHpGdj+VQykLfF4aB/VIhDLrPKTfXa3tZ2Dne5IMEJhvaY5Up0Ev+GTT/IGC3Te4Mu97CV8MgJtcpYiCjeAQt5CWTgX/rQAarK2eEcGTkQZRS86BsGBuciGcFHqWN8T8IkYY3ZuRj1OL6+ejpz5QeXQ==</string></dict><key>com.apple.gs.beta.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARDGdzLmJldGEuYXV0aL0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHAlrV+vXjKJLvL/RHzqkdn0Z4H+9Q+AaRWmA+0V7c76V5eiM50=</string></dict><key>com.apple.gs.itunes.mu.invite</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARE2dzLml0dW5lcy5tdS5pbnZpdGW9AEMB5J+tgMdF/rcCj+IM1rf0Tne64z7BWBknyjG8eAuwXb+rOKdtArekzNnXdnpjnKiMIysekZ2P5VDKQt8XhoH9UiEMus8pN9dre1nYOd7kgwQmG9pjlSnQS/4ZNP8gYLdN7gy73sJXwyAm1yliIKN4BC3kJZOBf+tABqsrZ4RwtUS4zNaCwPip4uNcdM9h0BsF9DOCWERSOQuIiog3IqUQCJKy</string></dict><key>com.apple.gs.icloud.storage.buy</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARFWdzLmljbG91ZC5zdG9yYWdlLmJ1eb0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHDt9WmLxLFcoC5U0ASH5dwqSS9lDZQvPzR6eju0PokGzzEcst0=</string></dict><key>com.apple.gs.news.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARDGdzLm5ld3MuYXV0aL0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHCVGIo/qI0XBnPnZyUg693mYb6CHfR0v6d1Tb4AL6hQPdlZg8k=</string></dict><key>com.apple.gs.authagent.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cAREWdzLmF1dGhhZ2VudC5hdXRovQBDAeSfrYDHRf63Ao/iDNa39E53uuM+wVgZJ8oxvHgLsF2/qzinbQK3pMzZ13Z6Y5yojCMrHpGdj+VQykLfF4aB/VIhDLrPKTfXa3tZ2Dne5IMEJhvaY5Up0Ev+GTT/IGC3Te4Mu97CV8MgJtcpYiCjeAQt5CWTgX/rQAarK2eEcDe0nEpNmzXWQLeaBQk7KesnIjWRy2NTyw6hLZQsORKPyF8Dbw==</string></dict><key>com.apple.gs.dip.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARC2dzLmRpcC5hdXRovQBDAeSfrYDHRf63Ao/iDNa39E53uuM+wVgZJ8oxvHgLsF2/qzinbQK3pMzZ13Z6Y5yojCMrHpGdj+VQykLfF4aB/VIhDLrPKTfXa3tZ2Dne5IMEJhvaY5Up0Ev+GTT/IGC3Te4Mu97CV8MgJtcpYiCjeAQt5CWTgX/rQAarK2eEcOEF2ac3jWN46JTiUwhO+ktNi35gP5LYjMASzfevZPwZxLIJnA==</string></dict><key>com.apple.gs.icloud.family.auth</key><dict><key>duration</key><integer>31536000</integer><key>expiry</key><integer>1647254848291</integer><key>token</key><string>AAAABLwIAAAAAGBN6cARFWdzLmljbG91ZC5mYW1pbHkuYXV0aL0AQwHkn62Ax0X+twKP4gzWt/ROd7rjPsFYGSfKMbx4C7Bdv6s4p20Ct6TM2dd2emOcqIwjKx6RnY/lUMpC3xeGgf1SIQy6zyk312t7Wdg53uSDBCYb2mOVKdBL/hk0/yBgt03uDLvewlfDICbXKWIgo3gELeQlk4F/60AGqytnhHCwhs+Bu1FDVgCRMFmx4UjHt2fj0+qNl3pDKRbPviUwMES38RQ=</string></dict></dict><key>sk</key><data>6DqecvOW2wkssiK3sdCFdFRRaM9LLnSoIF12nWxV8ak=</data><key>underAge</key><integer>0</integer><key>additionalInfo</key><dict></dict><key>DsPrsId</key><integer>1248358234</integer><key>primaryEmail</key><string>877028320@qq.com</string><key>ut</key><integer>2</integer></dict>
  **/
 //
-func (gsaSession *SrpGsaClient) DecryptSPD(spd []byte) []byte {
+func (gsaSession *GsaClient) DecryptSPD(spd []byte) []byte {
 	key := gsaSession.createSessionKey("extra data key:")
 	iv := gsaSession.createSessionKey("extra data iv:")
 	block, err := aes.NewCipher(key)
@@ -208,7 +208,7 @@ func (gsaSession *SrpGsaClient) DecryptSPD(spd []byte) []byte {
 }
 
 /*
-func (gsaSession *SrpGsaClient) HandleStep2(resp *GSACompleteResponse) []byte {
+func (gsaSession *GsaClient) HandleStep2(resp *GSACompleteResponse) []byte {
 	gsaSession.updateNegString("|")
 	gsaSession.updateNegData(resp.SPD)
 	gsaSession.updateNegString("|")
@@ -235,18 +235,18 @@ func srpPassword(h func() hash.Hash, s2kfo bool, password string, salt []byte, i
 	return pbkdf2.Key(digest, salt, iterationcount, h().Size(), h)
 }
 
-func (gsaSession *SrpGsaClient) updateNegData(data []byte) {
+func (gsaSession *GsaClient) updateNegData(data []byte) {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, uint32(len(data)))
-	gsaSession.Exchange.Write(buf.Bytes())
-	gsaSession.Exchange.Write(data)
+	gsaSession.ExchangeHashFun.Write(buf.Bytes())
+	gsaSession.ExchangeHashFun.Write(data)
 }
-func (gsaSession *SrpGsaClient) updateNegString(s string) {
-	gsaSession.Exchange.Write([]byte(s))
+func (gsaSession *GsaClient) updateNegString(s string) {
+	gsaSession.ExchangeHashFun.Write([]byte(s))
 }
 
 /*
-	func (kls *SrpGsaClient) ClientStep1() {
+	func (kls *GsaClient) ClientStep1() {
 		for i, proto := range kls.Proto {
 			kls.updateNegString(proto)
 			if i != len(kls.Proto)-1 {
@@ -255,7 +255,7 @@ func (gsaSession *SrpGsaClient) updateNegString(s string) {
 		}
 	}
 */
-func (gsaSession *SrpGsaClient) createSessionKey(keyname string) []byte {
+func (gsaSession *GsaClient) createSessionKey(keyname string) []byte {
 	skey := gsaSession.sRPClient.GetSessionKey()
 	mac := hmac.New(sha256.New, skey)
 	mac.Write([]byte(keyname))
