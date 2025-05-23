@@ -80,19 +80,19 @@ func (client *Client) ViewTeams() (*[]XCodeTeam, *errorz.StatusError) {
 	return ParsePlistQH65B2[[]XCodeTeam](client.postXcode("listTeams.action"), http.StatusOK, "teams")
 }
 
-func (client *Client) LoadTwoStepDevices() *errorz.StatusResult {
-	r, e := client.fa2Client.LoadTwoStepDevices()
-	if e != nil {
-		return e.AsStatusResult()
-	}
-	return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
+func (client *Client) LoadTwoStepDevices() (*TwoStepDevicesResponse, *errorz.StatusError) {
+	return client.fa2Client.LoadTwoStepDevices()
+	//if e != nil {
+	//	return e.AsStatusResult()
+	//}
+	//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
 }
-func (client *Client) RequestVerifyCode(codeType string, phoneId string) *errorz.StatusResult {
-	r, e := client.fa2Client.RequestVerifyCode(codeType, phoneId)
-	if e != nil {
-		return e.AsStatusResult()
-	}
-	return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
+func (client *Client) RequestVerifyCode(codeType string, phoneId string) (*TwoStepDevicesResponse, *errorz.StatusError) {
+	return client.fa2Client.RequestVerifyCode(codeType, phoneId)
+	//if e != nil {
+	//	return e.AsStatusResult()
+	//}
+	//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
 }
 
 /*

@@ -53,7 +53,11 @@ func (client *Fa2Client) LoadTwoStepDevices() (*TwoStepDevicesResponse, *errorz.
 	//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
 	request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
 	response := request.Request(client.httpClient)
-	return ParseItcAuthResponseAs[TwoStepDevicesResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusPartialContent) //此处是必须有3种状态都是可以的，下面的几个函数加的状态不一定是必须的
+	r, e := ParseItcAuthResponseAs[TwoStepDevicesResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusPartialContent) //此处是必须有3种状态都是可以的，下面的几个函数加的状态不一定是必须的
+	if r != nil {
+		r.HttpStatus = response.Status
+	}
+	return r, e
 }
 
 func (client *Fa2Client) VerifyCode(codeType string, code string, phoneId string) (*httpz.HttpResponse, *errorz.StatusError) {
@@ -85,7 +89,11 @@ func (client *Fa2Client) verifySMSVoiceCode(phoneId string, code string, codeTyp
 func (client *Fa2Client) requestDeviceCode() (*DeviceCodeResponse, *errorz.StatusError) {
 	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
 	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
-	return ParseItcAuthResponseAs[DeviceCodeResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted)
+	r, e := ParseItcAuthResponseAs[DeviceCodeResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted)
+	if r != nil {
+		r.PhoneNumberVerification.HttpStatus = response.Status
+	}
+	return r, e
 }
 
 /*
@@ -128,7 +136,11 @@ func (client *Fa2Client) requestSMSVoiceCode(phoneId string, t string) (*TwoStep
 	//urlStr := client.serverURL + "/verify/phone/"
 	urlStr := client.serverURL + "/verify/phone"
 	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).AddBody(param).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
-	return ParseItcAuthResponseAs[TwoStepDevicesResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted)
+	r, e := ParseItcAuthResponseAs[TwoStepDevicesResponse](response, http.StatusOK, http.StatusCreated, http.StatusAccepted)
+	if r != nil {
+		r.HttpStatus = response.Status
+	}
+	return r, e
 }
 
 /*

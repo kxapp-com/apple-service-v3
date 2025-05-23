@@ -70,4 +70,5 @@ type TwoStepDevicesResponse struct {
 	ManagedAccount                  bool                 `json:"managedAccount"`
 	TrustedDevices                  []trustedDevices     `json:"trustedDevices"`          //次项老的登录方式有
 	ServiceErrors                   []ServiceError       `json:"serviceErrors,omitempty"` //次项登录失败的时候包含了错误信息
+	HttpStatus                      int                  `json:"httpStatusCode"`          //http状态码
 }
