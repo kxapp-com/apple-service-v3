@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
-	"github.com/appuploader/apple-service-v3/xcode/gsa"
 	gsasrp2 "github.com/appuploader/apple-service-v3/xcode/gsa/gsasrp"
 	"github.com/google/uuid"
 	//gsasrp2 "github.com/kxapp-com/apple-service/pkg/gsa/gsasrp"
@@ -33,7 +33,7 @@ type Client struct {
 	httpClient     *http.Client
 	Token          *XcodeToken
 	xcodeSessionID string
-	anisseteData   *gsasrp2.AnisseteData
+	anisseteData   *appuploader.AnisseteData
 	AuthInfo       AuthInfo
 
 	fa2Client *Fa2Client
@@ -44,7 +44,7 @@ func NewClient() *Client {
 		httpClient: httpz.NewHttpClient(nil),
 	}
 }
-func (client *Client) Login(authInfo AuthInfo) *errorz.StatusResult {
+func (client *Client) Login(authInfo AuthInfo) *httpz.HttpResponse {
 	client.AuthInfo = authInfo
 	t, e := storage.Read[XcodeToken](authInfo.Email, storage.TokenTypeXcode)
 	if e == nil {
@@ -54,8 +54,9 @@ func (client *Client) Login(authInfo AuthInfo) *errorz.StatusResult {
 	}
 
 	if client.IsSessionAlive() {
-		log.Info("login success")
-		return errorz.SuccessStatusResult(nil)
+		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
+		//log.Info("login success")
+		//return errorz.SuccessStatusResult(nil)
 	}
 	return client.CheckPassword()
 }
@@ -80,14 +81,14 @@ func (client *Client) ViewTeams() (*[]XCodeTeam, *errorz.StatusError) {
 	return ParsePlistQH65B2[[]XCodeTeam](client.postXcode("listTeams.action"), http.StatusOK, "teams")
 }
 
-func (client *Client) LoadTwoStepDevices() (*TwoStepDevicesResponse, *errorz.StatusError) {
+func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
 	return client.fa2Client.LoadTwoStepDevices()
 	//if e != nil {
 	//	return e.AsStatusResult()
 	//}
 	//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
 }
-func (client *Client) RequestVerifyCode(codeType string, phoneId string) (*TwoStepDevicesResponse, *errorz.StatusError) {
+func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
 	return client.fa2Client.RequestVerifyCode(codeType, phoneId)
 	//if e != nil {
 	//	return e.AsStatusResult()
@@ -98,16 +99,23 @@ func (client *Client) RequestVerifyCode(codeType string, phoneId string) (*TwoSt
 /*
 在verify返回成功后请立即调用CheckPassword再次登录
 */
-func (client *Client) VerifyCode(codeType string, code string, phoneId string) *errorz.StatusResult {
-	_, e := client.fa2Client.VerifyCode(codeType, code, phoneId)
-	if e != nil {
-		return e.AsStatusResult()
-	} else {
+func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
+	r := client.fa2Client.VerifyCode(codeType, code, phoneId)
+	//if r.HasError() {
+	//	return r
+	//}
+	if r.Status == http.StatusOK {
 		return client.CheckPassword()
-		//client.ViewTeams()
-		//fmt.Println(ts.Body)
-		//return ret1
 	}
+	return r
+	//if e != nil {
+	//	return e.AsStatusResult()
+	//} else {
+	//	return client.CheckPassword()
+	//	//client.ViewTeams()
+	//	//fmt.Println(ts.Body)
+	//	//return ret1
+	//}
 }
 
 //func (client *Client) GetDevApiV1() *DevApiV1 {
@@ -142,12 +150,16 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 	if client.xcodeSessionID != "" {
 		headers["DSESSIONID"] = client.xcodeSessionID
 	} else {
-		client.anisseteData, _ = gsa.GetAnisseteFromAu(client.Token.Email)
+		d, eee := appuploader.GetAnisseteFromAu(client.Token.Email)
+		if eee != nil {
+			return &httpz.HttpResponse{Error: eee, Status: 500}
+		}
+		client.anisseteData = d
 	}
 	if client.anisseteData == nil {
 		return &httpz.HttpResponse{Error: errors.New("Load required data fail")}
 	}
-	client.anisseteData.AddAnisseteHeaders(headers)
+	gsasrp2.AddAnisseteHeaders(client.anisseteData, headers)
 	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
 	protocolStruct := map[string]any{"clientId": "XABBG36SBA", "protocolVersion": "QH65B2", "requestId": uuid.New().String()}
 	requestBody, _ := plist.Marshal(protocolStruct, plist.XMLFormat)
@@ -186,19 +198,23 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 *
 返回二次校验的设备列表，或者得到xctoken后返回登录成功消息，或者返回失败的提示消息
 */
-func (client *Client) CheckPassword() *errorz.StatusResult {
-	anissete, ee := gsa.GetAnisseteFromAu(client.Token.Email)
+func (client *Client) CheckPassword() *httpz.HttpResponse {
+	anissete, ee := appuploader.GetAnisseteFromAu(client.Token.Email)
 	if ee != nil {
-		return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
+		return &httpz.HttpResponse{Error: ee, Status: 500}
+		//return ParsedResponse{Status: ee.Error()}
+		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
 	spd, status := gsasrp2.NewSrpGsaClient(client.AuthInfo.Email, client.AuthInfo.Password, anissete).Login()
 	if status != nil {
-		return status.AsStatusResult()
+		return &httpz.HttpResponse{Error: status, Status: status.Status}
+		//return status.AsStatusResult()
 	}
 	if spd.StatusCode == http.StatusConflict {
 		client.fa2Client = NewXcodeFa2Client2(client.httpClient, spd.GetAppleIdToken(), anissete)
-		ee2 := errorz.StatusError{Status: 409, Body: "fa2 device code is required, please use the device code to verify"}
-		return ee2.AsStatusResult()
+
+		//ee2 := errorz.StatusError{Status: 409, Body: "fa2 device code is required, please use the device code to verify"}
+		//return ee2.AsStatusResult()
 		//res, e := client.fa2Client.LoadTwoStepDevices()
 		//if e != nil {
 		//	return e.AsStatusResult()
@@ -213,7 +229,8 @@ func (client *Client) CheckPassword() *errorz.StatusResult {
 		xt, e := gsasrp2.FetchXCodeToken(spd, anissete)
 		if e != nil {
 			log.Error("get xcode token error", e)
-			return e.AsStatusResult()
+			//return e.AsStatusResult()
+			return &httpz.HttpResponse{Error: e, Status: e.Status}
 		}
 
 		//if e != nil {
@@ -228,13 +245,15 @@ func (client *Client) CheckPassword() *errorz.StatusResult {
 				fmt.Println("save token error", saveE)
 			}
 		}
-		return errorz.SuccessStatusResult(nil)
+		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("login success")}
+		//return errorz.SuccessStatusResult(nil)
 		//}
-	} else {
-		log.Error(spd)
-		e := errorz.StatusError{Status: spd.StatusCode, Body: fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)}
-		return e.AsStatusResult()
 	}
+	log.Error(spd)
+	//e := errorz.StatusError{Status: spd.StatusCode, Body: fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)}
+	//return e.AsStatusResult()
+	return &httpz.HttpResponse{Error: errors.New(fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)), Status: spd.StatusCode}
+
 }
 func ParsePlistQH65B2[T any](response *httpz.HttpResponse, successStatus int, dataField string) (*T, *errorz.StatusError) {
 	if response.HasError() {

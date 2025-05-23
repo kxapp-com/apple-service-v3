@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"gitee.com/kxapp/kxapp-common/errorz"
+	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/srp"
 	"golang.org/x/crypto/pbkdf2"
 	"hash"
@@ -39,7 +40,7 @@ udid X-Mme-Device-Id  MobileMe Device Identifier
 imd X-Apple-I-MD Machine Data, One Time Password (OTP)
 imdm X-Apple-I-MD-M Machine Data, Machine Information
 */
-func NewSrpGsaClient(username, password string, data *AnisseteData) *SrpGsaClient {
+func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) *SrpGsaClient {
 	context := new(SrpGsaClient)
 	context.SRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	context.UserName = username
@@ -266,7 +267,7 @@ func (gsaSession *SrpGsaClient) createSessionKey(keyname string) []byte {
 *
 此spd必须是短信验证后重新登录后获得的spd，初次获得，返回状态码是409的spd是无法用于调用此接口的
 */
-func FetchXCodeToken(spd *ServerProvidedData, data *AnisseteData) (*GSAToken, *errorz.StatusError) {
+func FetchXCodeToken(spd *ServerProvidedData, data *appuploader.AnisseteData) (*GSAToken, *errorz.StatusError) {
 	if spd == nil || data == nil {
 		return nil, errorz.NewUnauthorizedError("no token found")
 	}
@@ -281,7 +282,7 @@ func FetchXCodeToken(spd *ServerProvidedData, data *AnisseteData) (*GSAToken, *e
 *
 此spd必须是短信验证后重新登录后获得的spd，初次获得，返回状态码是409的spd是无法用于调用此接口的
 */
-func FetchGSAToken(spd *ServerProvidedData, data *AnisseteData, bundleIDs []string) (map[string]*GSAToken, *errorz.StatusError) {
+func FetchGSAToken(spd *ServerProvidedData, data *appuploader.AnisseteData, bundleIDs []string) (map[string]*GSAToken, *errorz.StatusError) {
 	rinfo, _ := strconv.Atoi(data.XAppleIMDRINFO)
 	var cpd = GSARequestCPD{CID: data.XMmeDeviceId, ClientTime: time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		IMD: data.XAppleIMD, IMDM: data.XAppleIMDM, RInfo: rinfo, BootStrap: true, CKGen: true, UDID: data.XMmeDeviceId}

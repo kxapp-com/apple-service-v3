@@ -3,6 +3,7 @@ package gsasrp
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/appuploader/apple-service-v3/appuploader"
 	"time"
 )
 
@@ -11,20 +12,7 @@ const Status_GSA_Response_SecondaryActionRequired = 409       //Secondary authen
 const Status_GSA_Response_AnisetteResyncRequired = 434        //Anisette headers have expired
 const Status_GSA_Response_Anisette_Reprovision_Required = 433 //Anisette machine data has changed
 
-type AnisseteData struct {
-	XAppleIMD         string    `json:"X-Apple-I-MD"`
-	XAppleIMDM        string    `json:"X-Apple-I-MD-M"`
-	XAppleIMDRINFO    string    `json:"X-Apple-I-MD-RINFO"` //最新mac请求的此值  84215040，老的xcode是17106176，music库返回的是50660608
-	XAppleIMDLU       string    `json:"X-Apple-I-MD-LU"`
-	XAppleISRLNO      string    `json:"X-Apple-I-SRL-NO"`
-	XMmeClientInfo    string    `json:"X-Mme-Client-Info"`
-	XAppleIClientTime time.Time `json:"X-Apple-I-Client-Time"`
-	XAppleITimeZone   string    `json:"X-Apple-I-TimeZone"`
-	XAppleLocale      string    `json:"X-Apple-Locale"`
-	XMmeDeviceId      string    `json:"X-Mme-Device-Id"`
-}
-
-func (data *AnisseteData) AddAnisseteHeaders(headers map[string]string) map[string]string {
+func AddAnisseteHeaders(data *appuploader.AnisseteData, headers map[string]string) map[string]string {
 	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
 	headers["X-Apple-I-MD"] = data.XAppleIMD
 	headers["X-Apple-I-MD-LU"] = data.XAppleIMDLU

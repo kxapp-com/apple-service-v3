@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/xcode/gsa/gsasrp"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"
 	"net/http"
+	"regexp"
 )
 
 type GsaClient struct {
@@ -19,7 +21,7 @@ type GsaClient struct {
 	username    string
 	password    string
 
-	anisseteData *gsasrp.AnisseteData
+	anisseteData *appuploader.AnisseteData
 
 	appleIdToken string //登录2次验证用到
 
@@ -49,7 +51,7 @@ func NewClient() (*GsaClient, error) {
 }
 
 func (c *GsaClient) Login(username string, password string) *errorz.StatusError {
-	anissete, ee := GetAnisseteFromAu(c.username)
+	anissete, ee := appuploader.GetAnisseteFromAu(c.username)
 	if ee != nil {
 		return errorz.NewInternalError("load required data base " + ee.Error())
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
@@ -81,7 +83,7 @@ func (c *GsaClient) Login(username string, password string) *errorz.StatusError 
 func (c *GsaClient) LoadTwoStepDevices() (*httpz.HttpResponse, *TwoStepDevicesResponse) {
 	var requestURL = "https://gsa.apple.com/auth"
 	requestHeaders := map[string]string{"Referer": "https://idmsa.apple.com/", "X-Apple-Identity-Token": c.appleIdToken}
-	c.anisseteData.AddAnisseteHeaders(requestHeaders)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, requestHeaders)
 	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).Request(c.HttpClient)
 	if response.Status >= 200 && response.Status < 300 {
 		var twoStepDevicesResponse TwoStepDevicesResponse
@@ -96,7 +98,7 @@ func (c *GsaClient) LoadTwoStepDevices() (*httpz.HttpResponse, *TwoStepDevicesRe
 func (c *GsaClient) RequestSMSVoiceCode(phoneId string, mode string) (*httpz.HttpResponse, error) {
 	var requestURL = "https://gsa.apple.com/auth/verify/phone"
 	requestHeaders := map[string]string{"X-Apple-Identity-Token": c.appleIdToken}
-	c.anisseteData.AddAnisseteHeaders(requestHeaders)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, requestHeaders)
 
 	param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, mode)
@@ -113,7 +115,7 @@ func (c *GsaClient) RequestSMSVoiceCode(phoneId string, mode string) (*httpz.Htt
 func (c *GsaClient) VerifySMSVoiceCode(phoneId string, nonFTEU bool, code string, mode string) error {
 	var requestURL = "https://gsa.apple.com/auth/verify/phone/securitycode"
 	requestHeaders := map[string]string{"X-Apple-Identity-Token": c.appleIdToken}
-	c.anisseteData.AddAnisseteHeaders(requestHeaders)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, requestHeaders)
 	//param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param := `{"phoneNumber":{"id":%v,"nonFTEU":%v},"securityCode":{"code":"%v"},"mode":"%v"}`
 	param = fmt.Sprintf(param, phoneId, mode, nonFTEU, code, mode)
@@ -135,7 +137,7 @@ func (c *GsaClient) VerifySMSVoiceCode(phoneId string, nonFTEU bool, code string
 func (c *GsaClient) RequestDeviceCode() (*httpz.HttpResponse, error) {
 	var requestURL = "https://gsa.apple.com/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{"X-Apple-Identity-Token": c.appleIdToken}
-	c.anisseteData.AddAnisseteHeaders(requestHeaders)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, requestHeaders)
 
 	param := "{}"
 	response := httpz.NewHttpRequestBuilder(http.MethodPut, requestURL).
@@ -151,7 +153,7 @@ func (c *GsaClient) RequestDeviceCode() (*httpz.HttpResponse, error) {
 func (c *GsaClient) VerifyDeviceCode(code string) error {
 	var requestURL = "https://gsa.apple.com/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{"X-Apple-Identity-Token": c.appleIdToken}
-	c.anisseteData.AddAnisseteHeaders(requestHeaders)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, requestHeaders)
 	//param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param := `{"securityCode":{"code":"%s"}}`
 	param = fmt.Sprintf(param, code)
@@ -191,7 +193,7 @@ func (c *GsaClient) postXcode(action string) *httpz.HttpResponse {
 	if c.anisseteData == nil {
 		return &httpz.HttpResponse{Error: errors.New("Load required data fail")}
 	}
-	c.anisseteData.AddAnisseteHeaders(headers)
+	gsasrp.AddAnisseteHeaders(c.anisseteData, headers)
 	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
 	protocolStruct := map[string]any{"clientId": "XABBG36SBA", "protocolVersion": "QH65B2", "requestId": uuid.New().String()}
 	requestBody, _ := plist.Marshal(protocolStruct, plist.XMLFormat)
@@ -201,6 +203,23 @@ func (c *GsaClient) postXcode(action string) *httpz.HttpResponse {
 		c.XcodeSessionId = xcodeSessionId
 	}
 	return response
+}
+
+const RINFO_MUSIC = "84215040"
+const RINFO_JAVA = "17106176"
+
+func ReadErrorMessage(body []byte) string {
+	messageReg := regexp.MustCompile(`"message"\s*:\s*"([^"]+)"`)
+	matches := messageReg.FindStringSubmatch(string(body))
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	titleReg := regexp.MustCompile(`"title"\s*:\s*"([^"]+)"`)
+	matches = titleReg.FindStringSubmatch(string(body))
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return string(body)
 }
 
 type trustedPhoneNumber struct {

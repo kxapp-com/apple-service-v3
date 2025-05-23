@@ -9,9 +9,10 @@ import (
 
 func main() {
 	client := xcode.NewClient()
-	r := client.Login(xcode.AuthInfo{Email: "877028320@qq.com", Password: "MzdJzm38"})
-	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
+	//r := client.Login(xcode.AuthInfo{Email: "877028320@qq.com", Password: "MzdJzm38"})
+	r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
+	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@gmail.com", Password: "MzdJzm38"})
 	if r.Status == xcode.ErrorCodeInvalidAccount {
 		fmt.Printf("invalid account %+v", r)
 		return
@@ -32,9 +33,9 @@ func main() {
 		fmt.Printf("login failed")
 	} else if r.Status == 409 {
 		fmt.Printf("fa2 required\n")
-		deviceResult, e := client.LoadTwoStepDevices()
-		if e != nil {
-			fmt.Printf("load device failed %+v\n", e)
+		deviceResult := client.LoadTwoStepDevices()
+		if deviceResult.HasError() {
+			fmt.Printf("load device failed %+v %v\n", deviceResult.Error, deviceResult.Body)
 			return
 		}
 		//if deviceResult.Status != 0 {
@@ -42,7 +43,7 @@ func main() {
 		//	return
 		//}
 		//td := deviceResult.Body.(*xcode.TwoStepDevicesResponse)
-		tdStatus := deviceResult.HttpStatus
+		tdStatus := deviceResult.Status
 		//if deviceResult.Status == 401 {
 		//	fmt.Printf("login failed with 401 %+v\n", deviceResult)
 		//	return
@@ -72,13 +73,13 @@ func main() {
 			fmt.Println("please input device id")
 			var deviceId string = "1"
 			fmt.Scanln(&deviceId)
-			requestCodeResult, eee := client.RequestVerifyCode("sms", deviceId)
-			if eee != nil {
-				fmt.Printf("request code failed %+v", eee)
+			requestCodeResult := client.RequestVerifyCode("sms", deviceId)
+			if requestCodeResult.HasError() {
+				fmt.Printf("request code failed %+v", requestCodeResult.Error)
 				return
 			}
 			fmt.Printf("request code success %+v\n", requestCodeResult)
-			if requestCodeResult.HttpStatus == 200 || requestCodeResult.HttpStatus == 201 {
+			if requestCodeResult.Status == 200 || requestCodeResult.Status == 201 {
 				//fmt.Println(requestCodeResult.Body)
 				fmt.Println("please input device code")
 				var deviceCode string
