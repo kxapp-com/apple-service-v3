@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/hex"
 	"gitee.com/kxapp/kxapp-common/errorz"
 	"github.com/appuploader/apple-service-v3/appuploader"
@@ -25,7 +24,7 @@ const APP_BUNDLE_ID_XCODE = "com.apple.gs.xcode.auth"
 var XMmeClientInfo string // "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>" //work good
 // GsaClient apple gsa login
 type GsaClient struct {
-	ExchangeHashFun hash.Hash
+	hasher hash.Hash
 	//Proto     []string
 	sRPClient *srp.SRPClient
 	UserName  string
@@ -45,7 +44,7 @@ func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) 
 	context.sRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	context.UserName = username
 	context.Password = password
-	context.ExchangeHashFun = sha256.New()
+	context.hasher = sha256.New()
 	XMmeClientInfo = data.XMmeClientInfo
 
 	rinfo, _ := strconv.Atoi(data.XAppleIMDRINFO)
@@ -99,14 +98,18 @@ func (gsaClient *GsaClient) RequestInitForB() (*GSAInitResponse, *errorz.StatusE
 	req := GSAInitRequest{A2K: gsaClient.sRPClient.GetA(), CPD: gsaClient.CPD, ProtoStyle: []string{"s2k", "s2k_fo"}, UserName: gsaClient.UserName, Operation: "init"}
 	//对请求参数进行hash
 	for i, name := range req.ProtoStyle {
-		gsaClient.updateNegString(name)
+		//gsaClient.updateNegString(name)
+		gsaClient.hasher.Write([]byte(name))
 		if i != len(req.ProtoStyle)-1 {
-			gsaClient.updateNegString(",")
+			//gsaClient.updateNegString(",")
+			gsaClient.hasher.Write([]byte(","))
 		}
 	}
-	gsaClient.updateNegString("|")
+	gsaClient.hasher.Write([]byte("|"))
+	//gsaClient.updateNegString("|")
 	if gsaClient.DCH {
-		gsaClient.updateNegString("DisregardChannelBindings")
+		gsaClient.hasher.Write([]byte("DisregardChannelBindings"))
+		//gsaClient.updateNegString("DisregardChannelBindings")
 	}
 	return PostLoginStep1Request(req)
 }
@@ -133,8 +136,10 @@ func (gsaClient *GsaClient) CalculateM1(resp *GSAInitResponse) []byte {
 func (gsaClient *GsaClient) RequestCompleteForM2(m1 []byte, cookie string, selectedProtocol string) (*GSACompleteResponse, *errorz.StatusError) {
 	req := GSACompleteRequest{CPD: *gsaClient.CPD, M1: m1, Cookie: cookie, UserName: gsaClient.UserName, Operation: "complete"}
 	//对请求的参数进行hash
-	gsaClient.updateNegString("|")
-	gsaClient.updateNegString(selectedProtocol)
+	//gsaClient.updateNegString("|")
+	gsaClient.hasher.Write([]byte("|"))
+	gsaClient.hasher.Write([]byte(selectedProtocol))
+	//gsaClient.updateNegString(selectedProtocol)
 	//发送请求
 	resp, e := PostLoginStep2Request(req)
 	if e != nil {
@@ -143,13 +148,17 @@ func (gsaClient *GsaClient) RequestCompleteForM2(m1 []byte, cookie string, selec
 	//对返回记过进行hash
 	m2equal := reflect.DeepEqual(resp.M2, gsaClient.sRPClient.M2)
 	if resp != nil && (resp.Status.StatusCode == 0 || resp.Status.StatusCode == Status_GSA_Response_SecondaryActionRequired || resp.Status.StatusCode == Status_GSA_Response_OK) && m2equal {
-		gsaClient.updateNegString("|")
-		gsaClient.updateNegData(resp.SPD)
-		gsaClient.updateNegString("|")
+		gsaClient.hasher.Write([]byte("|"))
+		gsaClient.hasher.Write(resp.SPD)
+		//gsaClient.updateNegData(resp.SPD)
+		//gsaClient.updateNegString("|")
+		gsaClient.hasher.Write([]byte("|"))
 		if len(gsaClient.SC) > 0 {
-			gsaClient.updateNegData(gsaClient.SC)
+			gsaClient.hasher.Write(gsaClient.SC)
+			//gsaClient.updateNegData(gsaClient.SC)
 		}
-		gsaClient.updateNegString("|")
+		gsaClient.hasher.Write([]byte("|"))
+		//gsaClient.updateNegString("|")
 	}
 	if len(resp.SPD) > 0 {
 		resp.SPD = gsaClient.DecryptSPD(resp.SPD)
@@ -158,6 +167,9 @@ func (gsaClient *GsaClient) RequestCompleteForM2(m1 []byte, cookie string, selec
 	return resp, nil
 }
 
+//func (gsaClient *GsaClient) updateNegString(s string) {
+//	gsaClient.hasher.Write([]byte(s))
+//}
 /**
 DecryptSPD 解密Server Provided Data	User token information, AES-CBC encrypted using session key
  * 登陆成功后， 服务器返回了M2, np, spd.  其中np用于校验spd解密。  spd 字段是用aes加密的.SPD 字段中你会得到几个ID 和token ，这些token 是用于后续登陆authenticate服务器用
@@ -203,15 +215,12 @@ func srpPassword(h func() hash.Hash, s2kfo bool, password string, salt []byte, i
 	return pbkdf2.Key(digest, salt, iterationcount, h().Size(), h)
 }
 
-func (gsaClient *GsaClient) updateNegData(data []byte) {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint32(len(data)))
-	gsaClient.ExchangeHashFun.Write(buf.Bytes())
-	gsaClient.ExchangeHashFun.Write(data)
-}
-func (gsaClient *GsaClient) updateNegString(s string) {
-	gsaClient.ExchangeHashFun.Write([]byte(s))
-}
+//func (gsaClient *GsaClient) updateNegData(data []byte) {
+//	buf := new(bytes.Buffer)
+//	binary.Write(buf, binary.LittleEndian, uint32(len(data)))
+//	gsaClient.hasher.Write(buf.Bytes())
+//	gsaClient.hasher.Write(data)
+//}
 
 func (gsaClient *GsaClient) createSessionKey(keyname string) []byte {
 	skey := gsaClient.sRPClient.GetSessionKey()
