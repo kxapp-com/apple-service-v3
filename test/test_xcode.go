@@ -21,14 +21,15 @@ func main() {
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
-		t, e := client.ViewTeams()
-		if e == nil {
-			for _, v := range *t {
-				fmt.Printf(v.Name)
-			}
-		} else {
-			fmt.Printf(e.Error())
-		}
+		t := client.ViewTeams()
+		fmt.Println(t)
+		//if e == nil {
+		//	for _, v := range *t {
+		//		fmt.Printf(v.Name)
+		//	}
+		//} else {
+		//	fmt.Printf(e.Error())
+		//}
 	} else if r.Status == 401 {
 		fmt.Printf("login failed")
 	} else if r.Status == 409 {
@@ -66,8 +67,8 @@ func main() {
 				fmt.Println(verifyResult)
 			}
 			if verifyResult.Status == 200 {
-				vvv, e := client.ViewTeams()
-				fmt.Println(vvv, e)
+				vvv := client.ViewTeams()
+				fmt.Println(vvv)
 			}
 		} else if tdStatus == 200 {
 			fmt.Println("please input device id")
@@ -96,8 +97,8 @@ func main() {
 					fmt.Println(verifyResult)
 				}
 				if verifyResult.Status == 200 {
-					vvv, e := client.ViewTeams()
-					fmt.Println(vvv, e)
+					vvv := client.ViewTeams()
+					fmt.Println(vvv)
 				}
 			} else {
 				fmt.Printf("request code failed %+v", requestCodeResult)

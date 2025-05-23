@@ -27,7 +27,7 @@ var XMmeClientInfo string // "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.Aut
 type SrpGsaClient struct {
 	Exchange hash.Hash
 	//Proto     []string
-	SRPClient *srp.SRPClient
+	sRPClient *srp.SRPClient
 	UserName  string
 	Password  string
 	CPD       *GSARequestCPD
@@ -42,7 +42,7 @@ imdm X-Apple-I-MD-M Machine Data, Machine Information
 */
 func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) *SrpGsaClient {
 	context := new(SrpGsaClient)
-	context.SRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
+	context.sRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	context.UserName = username
 	context.Password = password
 	context.Exchange = sha256.New()
@@ -97,7 +97,7 @@ func (gsaSession *SrpGsaClient) Login() (*ServerProvidedData, *errorz.StatusErro
 	if e2 != nil {
 		return nil, e2
 	}
-	if !reflect.DeepEqual(m2Response.M2, gsaSession.SRPClient.M2) {
+	if !reflect.DeepEqual(m2Response.M2, gsaSession.sRPClient.M2) {
 		return nil, errorz.NewInternalError("m2 check failed,internal error")
 	}
 	var spd ServerProvidedData
@@ -113,7 +113,7 @@ func (gsaSession *SrpGsaClient) Login() (*ServerProvidedData, *errorz.StatusErro
 登录的第一个请求，发送init请求SRP的B值
 */
 func (gsaSession *SrpGsaClient) RequestInitForB() (*GSAInitResponse, *errorz.StatusError) {
-	req := GSAInitRequest{A2K: gsaSession.SRPClient.GetA(), CPD: gsaSession.CPD, ProtoStyle: []string{"s2k", "s2k_fo"}, UserName: gsaSession.UserName, Operation: "init"}
+	req := GSAInitRequest{A2K: gsaSession.sRPClient.GetA(), CPD: gsaSession.CPD, ProtoStyle: []string{"s2k", "s2k_fo"}, UserName: gsaSession.UserName, Operation: "init"}
 	//对请求参数进行hash
 	for i, name := range req.ProtoStyle {
 		gsaSession.updateNegString(name)
@@ -137,8 +137,8 @@ func (gsaSession *SrpGsaClient) CalculateM1(resp *GSAInitResponse) []byte {
 		nots2k = false
 	}
 	key := srpPassword(sha256.New, nots2k, gsaSession.Password, salt, iter)
-	gsaSession.SRPClient.ProcessClientChanllenge([]byte(gsaSession.UserName), key, salt, resp.SRPB)
-	return gsaSession.SRPClient.GetM1()
+	gsaSession.sRPClient.ProcessClientChanllenge([]byte(gsaSession.UserName), key, salt, resp.SRPB)
+	return gsaSession.sRPClient.GetM1()
 }
 
 /*
@@ -158,7 +158,7 @@ func (gsaSession *SrpGsaClient) RequestCompleteForM2(m1 []byte, cookie string, s
 		return resp, e
 	}
 	//对返回记过进行hash
-	m2equal := reflect.DeepEqual(resp.M2, gsaSession.SRPClient.M2)
+	m2equal := reflect.DeepEqual(resp.M2, gsaSession.sRPClient.M2)
 	if resp != nil && (resp.Status.StatusCode == 0 || resp.Status.StatusCode == Status_GSA_Response_SecondaryActionRequired || resp.Status.StatusCode == Status_GSA_Response_OK) && m2equal {
 		gsaSession.updateNegString("|")
 		gsaSession.updateNegData(resp.SPD)
@@ -256,7 +256,7 @@ func (gsaSession *SrpGsaClient) updateNegString(s string) {
 	}
 */
 func (gsaSession *SrpGsaClient) createSessionKey(keyname string) []byte {
-	skey := gsaSession.SRPClient.GetSessionKey()
+	skey := gsaSession.sRPClient.GetSessionKey()
 	mac := hmac.New(sha256.New, skey)
 	mac.Write([]byte(keyname))
 	expectedMAC := mac.Sum(nil)

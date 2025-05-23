@@ -3,7 +3,6 @@ package xcode
 import (
 	"errors"
 	"fmt"
-	"gitee.com/kxapp/kxapp-common/errorz"
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
@@ -63,22 +62,23 @@ func (client *Client) Login(authInfo AuthInfo) *httpz.HttpResponse {
 func (client *Client) IsSessionAlive() bool {
 	if client.Token.XAppleGSToken != "" {
 		response := client.postXcode("viewDeveloper.action")
-		if response.Status == http.StatusOK {
-			var rbody map[string]any
-			plist.Unmarshal(response.Body, &rbody)
-			if v, ok := rbody["resultCode"].(uint64); ok {
-				if v == 0 {
-					return true
-				}
-			}
-			return false
-		}
+		return response.Status == http.StatusOK
+		//if response.Status == http.StatusOK {
+		//	var rbody map[string]any
+		//	plist.Unmarshal(response.Body, &rbody)
+		//	if v, ok := rbody["resultCode"].(uint64); ok {
+		//		if v == 0 {
+		//			return true
+		//		}
+		//	}
+		//	return false
+		//}
 	}
 	return false
 }
 
-func (client *Client) ViewTeams() (*[]XCodeTeam, *errorz.StatusError) {
-	return ParsePlistQH65B2[[]XCodeTeam](client.postXcode("listTeams.action"), http.StatusOK, "teams")
+func (client *Client) ViewTeams() *httpz.HttpResponse {
+	return client.postXcode("listTeams.action")
 }
 
 func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
@@ -255,6 +255,8 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	return &httpz.HttpResponse{Error: errors.New(fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)), Status: spd.StatusCode}
 
 }
+
+/*
 func ParsePlistQH65B2[T any](response *httpz.HttpResponse, successStatus int, dataField string) (*T, *errorz.StatusError) {
 	if response.HasError() {
 		return nil, errorz.NewNetworkError(response.Error)
@@ -291,3 +293,4 @@ func ParsePlistQH65B2[T any](response *httpz.HttpResponse, successStatus int, da
 	}
 	return result, nil
 }
+*/
