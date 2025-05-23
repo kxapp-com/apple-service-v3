@@ -205,7 +205,7 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 		//return ParsedResponse{Status: ee.Error()}
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
-	spd, status := gsa.NewSrpGsaClient(client.AuthInfo.Email, client.AuthInfo.Password, anissete).Login()
+	spd, status := gsa.Login(client.AuthInfo.Email, client.AuthInfo.Password, anissete)
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
 		//return status.AsStatusResult()
