@@ -6,11 +6,9 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/hex"
 	"gitee.com/kxapp/kxapp-common/errorz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/srp"
-	"golang.org/x/crypto/pbkdf2"
 	"howett.net/plist"
 	"reflect"
 	"strconv"
@@ -19,49 +17,7 @@ import (
 
 const APP_BUNDLE_ID_XCODE = "com.apple.gs.xcode.auth"
 
-// var XMmeClientInfo string = "<MacBookPro17,1> <macOS;12.2.1;21D62> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>" //work good
-//var XMmeClientInfo string // "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>" //work good
-// GsaClient apple gsa login
-//type GsaClient struct {
-//	//hasher hash.Hash
-//	//Proto     []string
-//	sRPClient *srp.SRPClient
-//	UserName  string
-//	Password  string
-//	CPD       *GSARequestCPD
-//	//DCH       bool //DisregardChannelBindings
-//	//SC        []byte
-//}
-
 /*
-udid X-Mme-Device-Id  MobileMe Device Identifier
-imd X-Apple-I-MD Machine Data, One Time Password (OTP)
-imdm X-Apple-I-MD-M Machine Data, Machine Information
-*/
-//func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) *GsaClient {
-//	context := new(GsaClient)
-//	context.sRPClient = srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
-//	context.UserName = username
-//	context.Password = password
-//	//context.hasher = sha256.New()
-//	//XMmeClientInfo = data.XMmeClientInfo
-//
-//	rinfo, _ := strconv.Atoi(data.XAppleIMDRINFO)
-//	var cpd = GSARequestCPD{CID: data.XMmeDeviceId, ClientTime: time.Now().UTC().Format("2006-01-02T15:04:05Z"),
-//		IMD: data.XAppleIMD, IMDM: data.XAppleIMDM, RInfo: rinfo, BootStrap: true, CKGen: true, UDID: data.XMmeDeviceId,
-//		SerialNumber: data.XAppleISRLNO,Loc: data.XAppleLocale, ClientTimeZone: data.XAppleITimeZone,Icscrec: true,PRKGEN: true,SVCT: "iCloud"}
-//	//cpd.SerialNumber = data.XAppleISRLNO
-//	//cpd.Loc = data.XAppleLocale
-//	//cpd.ClientTimeZone = data.XAppleITimeZone
-//	//cpd.Icscrec = true
-//	//cpd.PRKGEN = true
-//	//cpd.SVCT = "iCloud"
-//	context.CPD = &cpd
-//	return context
-//}
-
-/*
-*
 开始登录，返回失败的状态码，如果成功返回m2解密的spd数据，也就是token数据,tokens数据是nsdic格式,可用被plist.unmarshal 为ServerProvidedData
 得到spd表示密码校验成功，后面可用使用spd里面的token开始二次校验登录或者获取其他的token
 如果hsc=434表示 anissete 已经过期，如果是433则表示需要reprovision设备了,409表示需要2次校验，200表示成功
@@ -82,7 +38,7 @@ func Login(username, password string, data *appuploader.AnisseteData) (*ServerPr
 	if e != nil {
 		return nil, e
 	}
-	key := srpPassword(resp.SeverProto != "s2k", password, resp.Salt, resp.IterationCount)
+	key := srp.PbkPassword(password, resp.Salt, resp.IterationCount, resp.SeverProto != "s2k")
 	sRPClient.ProcessClientChanllenge([]byte(username), key, resp.Salt, resp.SRPB)
 	if len(sRPClient.M1) == 0 {
 		return nil, errorz.NewInternalError("calculate m1 fail ,internal error")
@@ -108,17 +64,17 @@ func Login(username, password string, data *appuploader.AnisseteData) (*ServerPr
 }
 
 // srpPassword 计算srp P 字段， 密码用明文经多次sha256 迭代所得  s2kfo sp field not equal to s2k set true
-func srpPassword(s2kfo bool, password string, salt []byte, iterationcount int) []byte {
-	hashPass := sha256.New()
-	hashPass.Write([]byte(password))
-	var digest []byte
-	if s2kfo {
-		digest = []byte(hex.EncodeToString(hashPass.Sum(nil)))
-	} else {
-		digest = hashPass.Sum(nil)
-	}
-	return pbkdf2.Key(digest, salt, iterationcount, hashPass.Size(), sha256.New)
-}
+//func srpPassword(s2kfo bool, password string, salt []byte, iterationcount int) []byte {
+//	hashPass := sha256.New()
+//	hashPass.Write([]byte(password))
+//	var digest []byte
+//	if s2kfo {
+//		digest = []byte(hex.EncodeToString(hashPass.Sum(nil)))
+//	} else {
+//		digest = hashPass.Sum(nil)
+//	}
+//	return pbkdf2.Key(digest, salt, iterationcount, hashPass.Size(), sha256.New)
+//}
 
 /**
 DecryptSPD 解密Server Provided Data	User token information, AES-CBC encrypted using session key

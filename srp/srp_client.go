@@ -3,7 +3,10 @@ package srp
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"golang.org/x/crypto/pbkdf2"
 	"math/big"
 )
 
@@ -78,4 +81,15 @@ func intFromBytes(bytes []byte) *big.Int {
 	i := new(big.Int)
 	i.SetBytes(bytes)
 	return i
+}
+func PbkPassword(password string, salt []byte, iterationcount int, s2kfo bool) []byte {
+	hashPass := sha256.New()
+	hashPass.Write([]byte(password))
+	var digest []byte
+	if s2kfo {
+		digest = []byte(hex.EncodeToString(hashPass.Sum(nil)))
+	} else {
+		digest = hashPass.Sum(nil)
+	}
+	return pbkdf2.Key(digest, salt, iterationcount, hashPass.Size(), sha256.New)
 }
