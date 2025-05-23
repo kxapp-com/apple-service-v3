@@ -57,23 +57,6 @@ func NewSrpGsaClient(username, password string, data *appuploader.AnisseteData) 
 	cpd.Icscrec = true
 	cpd.PRKGEN = true
 	cpd.SVCT = "iCloud"
-	/*cpd = {
-		# Many of these values are not strictly necessary, but may be tracked by Apple
-		# I've chosen to match the AltServer implementation
-		# Not sure what these are for, needs some investigation
-		"bootstrap": True,  # All implementations set this to true
-		"icscrec": True,  # Only AltServer sets this to true
-		"pbe": False,  # All implementations explicitly set this to false
-		"prkgen": True,  # I've also seen ckgen
-		"svct": "iCloud",  # In certian circumstances, this can be 'iTunes' or 'iCloud'
-		# Not included, but I've also seen:
-		# 'capp': 'AppStore',
-		# 'dc': '#d4c5b3',
-		# 'dec': '#e1e4e3',
-		# 'prtn': 'ME349',
-	}*/
-	//var cpd = GSARequestCPD{CID: "649B8728-B398-4A6A-835A-5517488C3F9A", ClientTime: time.Now().UTC().Format("2006-01-02T15:04:05Z"),
-	//	IMD: data.XAppleIMD, IMDM: data.XAppleIMDM, RInfo: 17106176, BootStrap: true, CKGen: true, UDID: data.XMmeDeviceId}
 	context.CPD = &cpd
 	return context
 }
@@ -207,21 +190,6 @@ func (gsaClient *GsaClient) DecryptSPD(spd []byte) []byte {
 	return plaintext
 }
 
-/*
-func (gsaSession *GsaClient) HandleStep2(resp *GSACompleteResponse) []byte {
-	gsaSession.updateNegString("|")
-	gsaSession.updateNegData(resp.SPD)
-	gsaSession.updateNegString("|")
-	if len(gsaSession.SC) > 0 {
-		gsaSession.updateNegData(gsaSession.SC)
-	}
-	gsaSession.updateNegString("|")
-	if len(resp.SPD) > 0 {
-		return gsaSession.DecryptSPD(resp.SPD)
-	}
-	return nil
-}*/
-
 // srpPassword 计算srp P 字段， 密码用明文经多次sha256 迭代所得  s2kfo sp field not equal to s2k set true
 func srpPassword(h func() hash.Hash, s2kfo bool, password string, salt []byte, iterationcount int) []byte {
 	hashPass := sha256.New()
@@ -245,16 +213,6 @@ func (gsaClient *GsaClient) updateNegString(s string) {
 	gsaClient.ExchangeHashFun.Write([]byte(s))
 }
 
-/*
-	func (kls *GsaClient) ClientStep1() {
-		for i, proto := range kls.Proto {
-			kls.updateNegString(proto)
-			if i != len(kls.Proto)-1 {
-				kls.updateNegString(",")
-			}
-		}
-	}
-*/
 func (gsaClient *GsaClient) createSessionKey(keyname string) []byte {
 	skey := gsaClient.sRPClient.GetSessionKey()
 	mac := hmac.New(sha256.New, skey)
