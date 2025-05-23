@@ -15,6 +15,9 @@ import (
 	"net/http"
 )
 
+const ErrorCodeInvalidAccount = -20751
+const ErrorCodeInvalidPassword = -20101
+
 type XcodeToken struct {
 	Email string `json:"email"`
 	//gsa 业务逻辑请求中需要用到的头X-Apple-GS-Token
@@ -37,19 +40,26 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	//client := resty.New().
-	//	SetTimeout(30*time.Second).
-	//	SetRetryCount(5).
-	//	SetRetryWaitTime(1*time.Second).
-	//	SetRetryMaxWaitTime(30*time.Second).
-	//	SetHeader("User-Agent", "Xcode")
 	return &Client{
 		httpClient: httpz.NewHttpClient(nil),
-		//csrfTokens:        make(map[string]string),
-		//additionalHeaders: make(map[string]string),
 	}
 }
-func (client *Client) IsSessionAlive() *errorz.StatusResult {
+func (client *Client) Login(authInfo AuthInfo) *errorz.StatusResult {
+	client.AuthInfo = authInfo
+	t, e := storage.Read[XcodeToken](authInfo.Email, storage.TokenTypeXcode)
+	if e == nil {
+		client.Token = t
+	} else {
+		client.Token = &XcodeToken{Email: authInfo.Email}
+	}
+
+	if client.IsSessionAlive() {
+		log.Info("login success")
+		return errorz.SuccessStatusResult(nil)
+	}
+	return client.CheckPassword()
+}
+func (client *Client) IsSessionAlive() bool {
 	if client.Token.XAppleGSToken != "" {
 		response := client.postXcode("viewDeveloper.action")
 		if response.Status == http.StatusOK {
@@ -57,13 +67,13 @@ func (client *Client) IsSessionAlive() *errorz.StatusResult {
 			plist.Unmarshal(response.Body, &rbody)
 			if v, ok := rbody["resultCode"].(uint64); ok {
 				if v == 0 {
-					return errorz.SuccessStatusResult("ok")
+					return true
 				}
 			}
-			return errorz.NewUnauthorizedError("Unauthorized").AsStatusResult()
+			return false
 		}
 	}
-	return errorz.NewUnauthorizedError("Unauthorized").AsStatusResult()
+	return false
 }
 
 func (client *Client) ViewTeams() (*[]XCodeTeam, *errorz.StatusError) {
@@ -84,9 +94,6 @@ func (client *Client) RequestVerifyCode(codeType string, phoneId string) *errorz
 	}
 	return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
 }
-func (client *Client) CheckPassword() *errorz.StatusResult {
-	return client.xcodeCheckPassword()
-}
 
 /*
 在verify返回成功后请立即调用CheckPassword再次登录
@@ -96,10 +103,10 @@ func (client *Client) VerifyCode(codeType string, code string, phoneId string) *
 	if e != nil {
 		return e.AsStatusResult()
 	} else {
-		ret1 := client.CheckPassword()
-		client.ViewTeams()
+		return client.CheckPassword()
+		//client.ViewTeams()
 		//fmt.Println(ts.Body)
-		return ret1
+		//return ret1
 	}
 }
 
@@ -179,7 +186,7 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 *
 返回二次校验的设备列表，或者得到xctoken后返回登录成功消息，或者返回失败的提示消息
 */
-func (client *Client) xcodeCheckPassword() *errorz.StatusResult {
+func (client *Client) CheckPassword() *errorz.StatusResult {
 	anissete, ee := gsa.GetAnisseteFromAu(client.Token.Email)
 	if ee != nil {
 		return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
@@ -190,28 +197,39 @@ func (client *Client) xcodeCheckPassword() *errorz.StatusResult {
 	}
 	if spd.StatusCode == http.StatusConflict {
 		client.fa2Client = NewXcodeFa2Client2(client.httpClient, spd.GetAppleIdToken(), anissete)
-		res, e := client.fa2Client.LoadTwoStepDevices()
-		if e != nil {
-			return e.AsStatusResult()
-		} else {
-			if res.TrustedPhoneNumbers == nil && res.TrustedDevices == nil {
-				statusError := errorz.StatusError{Status: errorz.StatusParseDataError, Body: "trust device and phone not found,please add trust phone or device first"}
-				return statusError.AsStatusResult()
-			}
-			return errorz.SuccessStatusResult(res.TrustedPhoneNumbers)
-		}
+		ee2 := errorz.StatusError{Status: 409, Body: "fa2 device code is required, please use the device code to verify"}
+		return ee2.AsStatusResult()
+		//res, e := client.fa2Client.LoadTwoStepDevices()
+		//if e != nil {
+		//	return e.AsStatusResult()
+		//} else {
+		//	if res.TrustedPhoneNumbers == nil && res.TrustedDevices == nil {
+		//		statusError := errorz.StatusError{Status: errorz.StatusParseDataError, Body: "trust device and phone not found,please add trust phone or device first"}
+		//		return statusError.AsStatusResult()
+		//	}
+		//	return errorz.SuccessStatusResult(res.TrustedPhoneNumbers)
+		//}
 	} else if spd.StatusCode == http.StatusOK {
 		xt, e := gsasrp2.FetchXCodeToken(spd, anissete)
+		if e != nil {
+			log.Error("get xcode token error", e)
+			return e.AsStatusResult()
+		}
+
+		//if e != nil {
+		//	return e.AsStatusResult()
+		//} else {
+		client.postXcode("listTeams.action") //发送一个请求，获取dsessionid的头
 		if xt != nil {
 			client.Token.XAppleGSToken = xt.Token
 			client.Token.Adsid = spd.Adsid
-			storage.Write(client.Token, storage.TokenTypeXcode)
+			saveE := storage.Write(client.Token.Email, storage.TokenTypeXcode, client.Token)
+			if saveE != nil {
+				fmt.Println("save token error", saveE)
+			}
 		}
-		if e != nil {
-			return e.AsStatusResult()
-		} else {
-			return errorz.SuccessStatusResult(nil)
-		}
+		return errorz.SuccessStatusResult(nil)
+		//}
 	} else {
 		log.Error(spd)
 		e := errorz.StatusError{Status: spd.StatusCode, Body: fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)}

@@ -2,6 +2,8 @@ package storage
 
 import (
 	"gitee.com/kxapp/kxapp-common/utilz"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -11,11 +13,14 @@ const (
 )
 
 func tokenPath(email, tokenType string) string {
-	return "./" + email + "/token." + tokenType
+	//p := "./" + email + "/token." + tokenType
+	p := filepath.Join(".", "cookies", email, "token."+tokenType)
+	os.MkdirAll(filepath.Dir(p), 0755)
+	return p
 }
 func Read[T any](email string, tokenType string) (*T, error) {
 	return utilz.ReadFromJsonFileSec[T](tokenPath(email, tokenType), tokenPassword)
 }
-func Write(token any, tokenType string) error {
-	return utilz.WriteToJsonFileSec(tokenPath(tokenType, tokenType), token, tokenPassword)
+func Write(email string, tokenType string, token any) error {
+	return utilz.WriteToJsonFileSec(tokenPath(email, tokenType), token, tokenPassword)
 }

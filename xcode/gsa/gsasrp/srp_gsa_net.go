@@ -37,7 +37,8 @@ func parseGsaPlistResponse[T any](res *httpz.HttpResponse) (*T, *errorz.StatusEr
 		return nil, errorz.NewParseDataError(e1, e2, e4)
 	}
 	if statusBean.ErrorCode != 0 {
-		return nil, &errorz.StatusError{Status: statusBean.StatusCode, Body: statusBean.ErrorMessage}
+		//return nil, &errorz.StatusError{Status: statusBean.StatusCode, Body: statusBean.ErrorMessage}
+		return nil, &errorz.StatusError{Status: statusBean.ErrorCode, Body: statusBean.ErrorMessage}
 		//return nil, &errorz.StatusError{Status: statusBean.StatusCode, Message: statusBean.ErrorMessage, Body: responseBytes}
 	}
 	responseBytes, e3 := plist.Marshal(responseDic, plist.XMLFormat)
