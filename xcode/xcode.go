@@ -63,16 +63,6 @@ func (client *Client) IsSessionAlive() bool {
 	if client.Token.XAppleGSToken != "" {
 		response := client.postXcode("viewDeveloper.action")
 		return response.Status == http.StatusOK
-		//if response.Status == http.StatusOK {
-		//	var rbody map[string]any
-		//	plist.Unmarshal(response.Body, &rbody)
-		//	if v, ok := rbody["resultCode"].(uint64); ok {
-		//		if v == 0 {
-		//			return true
-		//		}
-		//	}
-		//	return false
-		//}
 	}
 	return false
 }
@@ -90,10 +80,6 @@ func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
 }
 func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
 	return client.fa2Client.RequestVerifyCode(codeType, phoneId)
-	//if e != nil {
-	//	return e.AsStatusResult()
-	//}
-	//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
 }
 
 /*
@@ -101,45 +87,11 @@ func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.
 */
 func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
 	r := client.fa2Client.VerifyCode(codeType, code, phoneId)
-	//if r.HasError() {
-	//	return r
-	//}
 	if r.Status == http.StatusOK {
 		return client.CheckPassword()
 	}
 	return r
-	//if e != nil {
-	//	return e.AsStatusResult()
-	//} else {
-	//	return client.CheckPassword()
-	//	//client.ViewTeams()
-	//	//fmt.Println(ts.Body)
-	//	//return ret1
-	//}
 }
-
-//func (client *Client) GetDevApiV1() *DevApiV1 {
-//	if client.apiV1 != nil {
-//		return client.apiV1
-//	}
-//	if client.AuthInfo.IsFreeAccount {
-//		headers := xcodeApiV1Header(client.Token.XAppleGSToken, client.Token.Adsid, client.xcodeSessionID)
-//		headers = client.anisseteData.AddAnisseteHeaders(headers)
-//		client.apiV1 = &DevApiV1{
-//			HttpClient:      client.httpClient,
-//			ServiceURL:      "https://developerservices2.apple.com/services/v1/",
-//			JsonHttpHeaders: headers,
-//		}
-//	} else {
-//		client.apiV1 = &DevApiV1{
-//			HttpClient:      client.httpClient,
-//			ServiceURL:      "https://developer.apple.com/services-account/v1/",
-//			JsonHttpHeaders: client.itcTokenHeader(),
-//		}
-//	}
-//	client.apiV1.TeamId = client.teamId
-//	return client.apiV1
-//}
 
 /*
 *
@@ -174,26 +126,6 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 	return response
 }
 
-/*func parseXcodeTeams(response *httpz.HttpResponse) *errorz.StatusResult {
-	re, e := ParsePlistQH65B2[[]XCodeTeam](response, http.StatusOK, "teams")
-	if e != nil {
-		return e.AsStatusResult()
-	}
-	var dteam []DevTeam
-	for _, team := range *re {
-		isFree := true
-		for _, membership := range team.Memberships {
-			if membership.MembershipProductId != "fp22" {
-				isFree = false
-				break
-			}
-		}
-		dt := DevTeam{TeamId: team.TeamId, Name: team.Name, Status: team.Status, Type: team.Type, XcodeFreeOnly: isFree}
-		dteam = append(dteam, dt)
-	}
-	return errorz.SuccessStatusResult(dteam)
-}*/
-
 /*
 *
 返回二次校验的设备列表，或者得到xctoken后返回登录成功消息，或者返回失败的提示消息
@@ -208,34 +140,15 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	spd, status := gsa.Login(client.AuthInfo.Email, client.AuthInfo.Password, anissete)
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
-		//return status.AsStatusResult()
 	}
 	if spd.StatusCode == http.StatusConflict {
 		client.fa2Client = NewXcodeFa2Client2(client.httpClient, spd.GetAppleIdToken(), anissete)
-
-		//ee2 := errorz.StatusError{Status: 409, Body: "fa2 device code is required, please use the device code to verify"}
-		//return ee2.AsStatusResult()
-		//res, e := client.fa2Client.LoadTwoStepDevices()
-		//if e != nil {
-		//	return e.AsStatusResult()
-		//} else {
-		//	if res.TrustedPhoneNumbers == nil && res.TrustedDevices == nil {
-		//		statusError := errorz.StatusError{Status: errorz.StatusParseDataError, Body: "trust device and phone not found,please add trust phone or device first"}
-		//		return statusError.AsStatusResult()
-		//	}
-		//	return errorz.SuccessStatusResult(res.TrustedPhoneNumbers)
-		//}
 	} else if spd.StatusCode == http.StatusOK {
 		xt, e := gsa.FetchXCodeToken(spd, anissete)
 		if e != nil {
 			log.Error("get xcode token error", e)
-			//return e.AsStatusResult()
 			return &httpz.HttpResponse{Error: e, Status: e.Status}
 		}
-
-		//if e != nil {
-		//	return e.AsStatusResult()
-		//} else {
 		client.postXcode("listTeams.action") //发送一个请求，获取dsessionid的头
 		if xt != nil {
 			client.Token.XAppleGSToken = xt.Token
@@ -246,51 +159,8 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 			}
 		}
 		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("login success")}
-		//return errorz.SuccessStatusResult(nil)
-		//}
 	}
 	log.Error(spd)
-	//e := errorz.StatusError{Status: spd.StatusCode, Body: fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)}
-	//return e.AsStatusResult()
 	return &httpz.HttpResponse{Error: errors.New(fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)), Status: spd.StatusCode}
 
 }
-
-/*
-func ParsePlistQH65B2[T any](response *httpz.HttpResponse, successStatus int, dataField string) (*T, *errorz.StatusError) {
-	if response.HasError() {
-		return nil, errorz.NewNetworkError(response.Error)
-	}
-	if len(response.Body) == 0 {
-		if response.Status == successStatus {
-			return nil, nil
-		} else {
-			return nil, &errorz.StatusError{Status: response.Status, Body: ""}
-		}
-	}
-	var resultMap map[string]any
-	plist.Unmarshal(response.Body, &resultMap)
-	resultCode := resultMap["resultCode"]
-	if v, ok1 := resultCode.(uint64); ok1 && v != 0 {
-		ustring, ok := resultMap["userString"].(string)
-		if !ok {
-			ustring, ok = resultMap["resultString"].(string)
-		}
-		if !ok {
-			ustring = string(response.Body)
-		}
-		if v == 1100 {
-			return nil, errorz.NewUnauthorizedError(ustring)
-		}
-		return nil, &errorz.StatusError{Status: int(v), Body: ustring}
-	}
-	obj := resultMap[dataField]
-	bt, e := plist.Marshal(obj, plist.XMLFormat)
-	result := new(T)
-	_, e2 := plist.Unmarshal(bt, result)
-	if e != nil || e2 != nil {
-		return nil, errorz.NewParseDataError(e, e2)
-	}
-	return result, nil
-}
-*/
