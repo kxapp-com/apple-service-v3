@@ -9,10 +9,10 @@ import (
 )
 
 type Fa2Client struct {
-	headers             map[string]string
-	httpClient          *http.Client
-	serverURL           string
-	beforeReturnHandler func(response *http.Response)
+	headers    map[string]string
+	httpClient *http.Client
+	serverURL  string
+	//beforeReturnHandler func(response *http.Response)
 }
 
 func NewXcodeFa2Client2(httpclient *http.Client, appleIdToken string, data *appuploader.AnisseteData) *Fa2Client {
@@ -32,7 +32,7 @@ func (client *Fa2Client) SetAnisetteData(data *appuploader.AnisseteData) {
 没登录状态调用返回status http.StatusUnauthorized
 */
 func (client *Fa2Client) LoadTwoStepDevices() *httpz.HttpResponse {
-	request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers).BeforeReturn(client.beforeReturnHandler)
+	request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers)
 	//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
 	request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
 	return request.Request(client.httpClient)
@@ -54,12 +54,12 @@ func (client *Fa2Client) verifySMSVoiceCode(phoneId string, code string, codeTyp
 	param := `{"phoneNumber": {"id": %s}, "securityCode": {"code": "%s"}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, code, codeType)
 	urlStr := client.serverURL + "/verify/phone/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 func (client *Fa2Client) requestDeviceCode() *httpz.HttpResponse {
 	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).Request(client.httpClient)
 	return response
 }
 
@@ -70,7 +70,7 @@ func (client *Fa2Client) verifyDeviceCode(code string) *httpz.HttpResponse {
 	param := `{"securityCode": {"code": "%s"}}`
 	param = fmt.Sprintf(param, code)
 	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 
@@ -86,7 +86,7 @@ func (client *Fa2Client) requestSMSVoiceCode(phoneId string, t string) *httpz.Ht
 	param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, t)
 	urlStr := client.serverURL + "/verify/phone"
-	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).AddBody(param).BeforeReturn(client.beforeReturnHandler).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 
