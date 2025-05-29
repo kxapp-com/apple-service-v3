@@ -27,7 +27,7 @@ const APP_BUNDLE_ID_XCODE = "com.apple.gs.xcode.auth"
 */
 var XMmeClientInfo string
 
-func Login(username, password string, data *appuploader.AnisseteData) (*ServerProvidedData, *errorz.StatusError) {
+func Login(username, password string, data *appuploader.AnisseteData) (*GSACompleteResponse, *errorz.StatusError) {
 	sRPClient := srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	rinfo, _ := strconv.Atoi(data.XAppleIMDRINFO)
 	var cpd = &GSARequestCPD{CID: data.XMmeDeviceId, ClientTime: time.Now().UTC().Format("2006-01-02T15:04:05Z"),
@@ -60,12 +60,13 @@ func Login(username, password string, data *appuploader.AnisseteData) (*ServerPr
 	if len(m2Response.SPD) > 0 {
 		m2Response.SPD = DecryptSPD(m2Response.SPD, sRPClient.GetSessionKey())
 	}
-	var spd ServerProvidedData
-	_, e3 := plist.Unmarshal(m2Response.SPD, &spd)
-	if e3 != nil {
-		return nil, errorz.NewParseDataError(e3)
-	}
-	return &spd, nil
+	return m2Response, nil
+	//var spd ServerProvidedData
+	//_, e3 := plist.Unmarshal(m2Response.SPD, &spd)
+	//if e3 != nil {
+	//	return nil, errorz.NewParseDataError(e3)
+	//}
+	//return &spd, nil
 }
 
 /**

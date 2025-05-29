@@ -22,7 +22,7 @@ func main() {
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
 		t := client.ViewTeams()
-		fmt.Println(t)
+		fmt.Println(t.Status, string(t.Body))
 		//if e == nil {
 		//	for _, v := range *t {
 		//		fmt.Printf(v.Name)
@@ -51,11 +51,12 @@ func main() {
 		//}
 		fmt.Printf("load device success\n")
 		fmt.Printf("%+v", deviceResult)
+		var phoneId = "3"
 		if tdStatus == 201 {
 			fmt.Println("please input device code")
 			var deviceCode string
 			fmt.Scanln(&deviceCode)
-			verifyResult := client.VerifyCode("sms", deviceCode, "3")
+			verifyResult := client.VerifyCode("sms", deviceCode, phoneId)
 			fmt.Println(verifyResult)
 			for {
 				if verifyResult.Status == 200 || verifyResult.Status == 0 {
@@ -63,7 +64,7 @@ func main() {
 				}
 				fmt.Println("please input device code")
 				fmt.Scanln(&deviceCode)
-				verifyResult = client.VerifyCode("sms", deviceCode, "3")
+				verifyResult = client.VerifyCode("sms", deviceCode, phoneId)
 				fmt.Println(verifyResult)
 			}
 			if verifyResult.Status == 200 {

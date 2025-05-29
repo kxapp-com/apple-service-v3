@@ -101,15 +101,25 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 	headers := xcodeServiceHeader(client.Token.XAppleGSToken, client.Token.Adsid)
 	if client.xcodeSessionID != "" {
 		headers["DSESSIONID"] = client.xcodeSessionID
+		if client.anisseteData == nil {
+			d, eee := appuploader.GetAnisseteFromAu(client.Token.Email)
+			if eee != nil {
+				return &httpz.HttpResponse{Error: eee, Status: 500}
+			}
+			client.anisseteData = d
+		}
 	} else {
+		//if client.anisseteData == nil {
 		d, eee := appuploader.GetAnisseteFromAu(client.Token.Email)
 		if eee != nil {
 			return &httpz.HttpResponse{Error: eee, Status: 500}
 		}
 		client.anisseteData = d
+		//}
+
 	}
 	if client.anisseteData == nil {
-		return &httpz.HttpResponse{Error: errors.New("Load required data fail")}
+		return &httpz.HttpResponse{Error: errors.New("load required data fail")}
 	}
 	AddAnisseteHeaders(client.anisseteData, headers)
 	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
@@ -137,19 +147,25 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 		//return ParsedResponse{Status: ee.Error()}
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
-	spd, status := gsa.Login(client.AuthInfo.Email, client.AuthInfo.Password, anissete)
+	//client.anisseteData = anissete
+	result, status := gsa.Login(client.AuthInfo.Email, client.AuthInfo.Password, anissete)
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
 	}
+	var spd gsa.ServerProvidedData
+	_, e3 := plist.Unmarshal(result.SPD, &spd)
+	if e3 != nil {
+		return &httpz.HttpResponse{Error: e3, Status: 500}
+	}
+	//return &spd, nil
 	if spd.StatusCode == http.StatusConflict {
 		client.fa2Client = NewXcodeFa2Client2(client.httpClient, spd.GetAppleIdToken(), anissete)
 	} else if spd.StatusCode == http.StatusOK {
-		xt, e := gsa.FetchXCodeToken(spd, anissete)
+		xt, e := gsa.FetchXCodeToken(&spd, anissete)
 		if e != nil {
 			log.Error("get xcode token error", e)
 			return &httpz.HttpResponse{Error: e, Status: e.Status}
 		}
-		client.postXcode("listTeams.action") //发送一个请求，获取dsessionid的头
 		if xt != nil {
 			client.Token.XAppleGSToken = xt.Token
 			client.Token.Adsid = spd.Adsid
