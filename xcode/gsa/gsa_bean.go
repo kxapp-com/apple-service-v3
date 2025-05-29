@@ -3,30 +3,12 @@ package gsa
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/appuploader/apple-service-v3/appuploader"
-	"time"
 )
 
 const Status_GSA_Response_OK = 200                            //Request accepted
 const Status_GSA_Response_SecondaryActionRequired = 409       //Secondary authentication (2FA) is required
 const Status_GSA_Response_AnisetteResyncRequired = 434        //Anisette headers have expired
 const Status_GSA_Response_Anisette_Reprovision_Required = 433 //Anisette machine data has changed
-
-func AddAnisseteHeaders(data *appuploader.AnisseteData, headers map[string]string) map[string]string {
-	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
-	headers["X-Apple-I-MD"] = data.XAppleIMD
-	headers["X-Apple-I-MD-LU"] = data.XAppleIMDLU
-	headers["X-Apple-I-MD-M"] = data.XAppleIMDM
-	headers["X-Apple-I-MD-RINFO"] = data.XAppleIMDRINFO
-	headers["X-Apple-I-TimeZone"] = data.XAppleITimeZone
-	headers["X-Apple-Locale"] = data.XAppleLocale
-	headers["X-Mme-Client-Info"] = data.XMmeClientInfo
-	headers["X-Mme-Device-Id"] = data.XMmeDeviceId
-	headers["X-Apple-I-Client-Time"] = time.Now().Format(XCode_Client_Time_Format)
-	//headers["X-Apple-I-Client-Time"] = util.GetAppleClientTimeNowString3(data.XAppleIClientTime)
-	//headers["X-Apple-I-Client-Time"] = time.Now().UTC().Format(util.XCode_Client_Time_Format)
-	return headers
-}
 
 type GSARequestCPD struct {
 	CID          string `plist:"AppleIDClientIdentifier"`

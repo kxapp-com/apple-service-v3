@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
-	"github.com/appuploader/apple-service-v3/xcode/gsa"
 	"net/http"
+	"time"
 )
 
 type Fa2Client struct {
@@ -18,13 +18,14 @@ type Fa2Client struct {
 func NewXcodeFa2Client2(httpclient *http.Client, appleIdToken string, data *appuploader.AnisseteData) *Fa2Client {
 	client := &Fa2Client{httpClient: httpclient}
 	client.serverURL = "https://gsa.apple.com/auth"
-	client.headers = gsa.AddAnisseteHeaders(data, xcodeStep2Header())
+	//client.headers = gsa.AddAnisseteHeaders(data, xcodeStep2Header())
+	client.SetAnisetteData(data)
 	client.headers["X-Apple-Identity-Token"] = appleIdToken
 	return client
 }
 
 func (client *Fa2Client) SetAnisetteData(data *appuploader.AnisseteData) {
-	client.headers = gsa.AddAnisseteHeaders(data, xcodeStep2Header())
+	client.headers = AddAnisseteHeaders(data, xcodeStep2Header())
 }
 
 /*
@@ -89,38 +90,38 @@ func (client *Fa2Client) requestSMSVoiceCode(phoneId string, t string) *httpz.Ht
 	return response
 }
 
-//func ParseItcAuthResponseAs[T any](response *httpz.HttpResponse, successStatus ...int) (*T, *errorz.StatusError) {
-//	if response.HasError() {
-//		return nil, errorz.NewNetworkError(response.Error)
-//	}
-//	if response.Status == http.StatusUnauthorized {
-//		return nil, errorz.NewUnauthorizedError(string(response.Body))
-//	}
-//	if len(response.Body) > 0 {
-//		errorDetail := jsoniter.Get(response.Body, "serviceErrors", 0, "message")
-//		if errorDetail.LastError() == nil {
-//			return nil, &errorz.StatusError{Status: response.Status, Body: errorDetail.ToString()}
-//		}
-//		errorDetail2 := jsoniter.Get(response.Body, "service_errors", 0, "title")
-//		if errorDetail2.LastError() == nil {
-//			return nil, &errorz.StatusError{Status: response.Status, Body: errorDetail2.ToString()}
-//		}
-//		errorName := jsoniter.Get(response.Body, "serviceErrors", 0, "code")
-//		if errorName.LastError() == nil {
-//			return nil, &errorz.StatusError{Status: response.Status, Body: errorName.ToString()}
-//		}
-//	}
-//	if utilz.InSlice(successStatus, response.Status) || len(successStatus) == 0 {
-//		if len(response.Body) == 0 {
-//			return nil, nil
-//		}
-//		o, e := utilz.ParseJsonAs[T](response.Body)
-//		if e != nil {
-//			log.Errorf("status: %v , body: %s", response.Status, string(response.Body))
-//		}
-//		return o, errorz.NewParseDataError(e)
-//	} else {
-//		log.Errorf("status: %v , body: %s", response.Status, string(response.Body))
-//		return nil, &errorz.StatusError{Status: response.Status, Body: string(response.Body)}
-//	}
-//}
+/*
+*
+xcode 二次校验的时候使用的头
+*/
+func xcodeStep2Header() map[string]string {
+	return map[string]string{
+		"Content-Type":     httpz.ContentType_JSON,
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		//"Accept-Language":  "en-US,en;q=0.9",
+		"Accept-Language": "zh-cn",
+		"User-Agent":      httpz.UserAgent_XCode,
+		//"X-MMe-Client-Info": "<iMacPro1,1> <macOS;12.5;21G72> <com.apple.AuthKit/1 (com.apple.dt.Xcode/20504)>",
+		"X-MMe-Client-Info": "<iMac20,2> <Mac OS X;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>",
+		//"X-MMe-Client-Info": "<iMac20,2> <Mac OS X;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/21534)>",
+		"X-Apple-App-Info": "com.apple.gs.xcode.auth",
+		"X-Xcode-Version":  "14.2 (14C18)",
+		//"X-Xcode-Version":   "12.4 (12D4e)",
+	}
+}
+func AddAnisseteHeaders(data *appuploader.AnisseteData, headers map[string]string) map[string]string {
+	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
+	headers["X-Apple-I-MD"] = data.XAppleIMD
+	headers["X-Apple-I-MD-LU"] = data.XAppleIMDLU
+	headers["X-Apple-I-MD-M"] = data.XAppleIMDM
+	headers["X-Apple-I-MD-RINFO"] = data.XAppleIMDRINFO
+	headers["X-Apple-I-TimeZone"] = data.XAppleITimeZone
+	headers["X-Apple-Locale"] = data.XAppleLocale
+	headers["X-Mme-Client-Info"] = data.XMmeClientInfo
+	headers["X-Mme-Device-Id"] = data.XMmeDeviceId
+	headers["X-Apple-I-Client-Time"] = time.Now().Format(XCode_Client_Time_Format)
+	//headers["X-Apple-I-Client-Time"] = util.GetAppleClientTimeNowString3(data.XAppleIClientTime)
+	//headers["X-Apple-I-Client-Time"] = time.Now().UTC().Format(util.XCode_Client_Time_Format)
+	return headers
+}

@@ -1,7 +1,5 @@
 package xcode
 
-import "net/http"
-
 const VerifyCodeMode_SMS = "sms"
 const VerifyCodeMode_Voice = "voice"
 const VerifyCodeMode_Device = "device"
@@ -73,11 +71,4 @@ type TwoStepDevicesResponse struct {
 	TrustedDevices                  []trustedDevices     `json:"trustedDevices"`          //次项老的登录方式有
 	ServiceErrors                   []ServiceError       `json:"serviceErrors,omitempty"` //次项登录失败的时候包含了错误信息
 	HttpStatus                      int                  `json:"httpStatusCode"`          //http状态码
-}
-
-type ParsedResponse struct {
-	Status       int         //200,201之类表示成功
-	Body         any         //如果成功，body存放解码后的对象
-	Header       http.Header //响应头
-	ErrorMessage string      //错误信息
 }

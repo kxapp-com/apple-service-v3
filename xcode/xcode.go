@@ -111,7 +111,7 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 	if client.anisseteData == nil {
 		return &httpz.HttpResponse{Error: errors.New("Load required data fail")}
 	}
-	gsa.AddAnisseteHeaders(client.anisseteData, headers)
+	AddAnisseteHeaders(client.anisseteData, headers)
 	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
 	protocolStruct := map[string]any{"clientId": "XABBG36SBA", "protocolVersion": "QH65B2", "requestId": uuid.New().String()}
 	requestBody, _ := plist.Marshal(protocolStruct, plist.XMLFormat)
@@ -163,4 +163,20 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	log.Error(spd)
 	return &httpz.HttpResponse{Error: errors.New(fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)), Status: spd.StatusCode}
 
+}
+
+/*
+*
+请求xcode服务器，如viewdeveloper使用的头
+*/
+func xcodeServiceHeader(gstoken string, adsid string) map[string]string {
+	headers := make(map[string]string)
+	headers["Accept"] = "text/x-xml-plist"
+	headers["Content-Type"] = "text/x-xml-plist"
+	headers["User-Agent"] = "Xcode"
+	headers["X-Apple-App-Info"] = "com.apple.gs.xcode.auth"
+	headers["X-Xcode-Version"] = "12.4 (12D4e)"
+	headers["X-Apple-GS-Token"] = gstoken
+	headers["X-Apple-I-Identity-Id"] = adsid
+	return headers
 }
