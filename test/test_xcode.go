@@ -21,7 +21,10 @@ func main() {
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
-		t := client.ViewTeams()
+		apiClient := xcode.NewDevApiV1(client)
+		//t := apiClient.ListDevices()
+		t := apiClient.ListBundleID()
+		//t := client.ViewTeams()
 		fmt.Println(t.Status, string(t.Body))
 		//if e == nil {
 		//	for _, v := range *t {

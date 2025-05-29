@@ -159,7 +159,7 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	}
 	//return &spd, nil
 	if spd.StatusCode == http.StatusConflict {
-		client.fa2Client = NewXcodeFa2Client2(client.httpClient, spd.GetAppleIdToken(), anissete)
+		client.fa2Client = NewXcodeFa2Client(client.httpClient, spd.GetAppleIdToken(), anissete)
 	} else if spd.StatusCode == http.StatusOK {
 		xt, e := gsa.FetchXCodeToken(&spd, anissete)
 		if e != nil {
