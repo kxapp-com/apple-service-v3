@@ -21,10 +21,15 @@ func main() {
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
+		t := client.ViewTeams()
+		fmt.Println(t.Status, string(t.Body))
 		apiClient := xcode.NewDevApiV1(client)
-		//t := apiClient.ListDevices()
-		t := apiClient.ListBundleID()
-		//t := client.ViewTeams()
+		apiClient.TeamId = "CS2ADD9F7F"
+		//apiClient.TeamId = t.Body.(*xcode.ViewTeamsResponse).Teams[0].TeamId
+		t = apiClient.ListDevices()
+		fmt.Println(t.Status, string(t.Body))
+		t = apiClient.ListBundleID()
+
 		fmt.Println(t.Status, string(t.Body))
 		//if e == nil {
 		//	for _, v := range *t {
