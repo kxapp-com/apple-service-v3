@@ -2,27 +2,28 @@ package fastapple
 
 import (
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/storage"
+	"github.com/appuploader/apple-service-v3/util"
 	"net/http"
-	"strings"
 )
 
 type DevApiV1 struct {
 	httpClient *http.Client
 	userName   string
-	token      map[string]string
+	cookies    string
 }
 
 func NewDevApiV1(userName string) *DevApiV1 {
-	hClient := httpz.NewHttpClient(http.DefaultClient.Jar)
+	jar, _ := cookiejar.New(nil)
+	hClient := httpz.NewHttpClient(jar)
 	api := &DevApiV1{
 		httpClient: hClient,
 		userName:   userName,
-		token:      make(map[string]string),
 	}
 	t, e := storage.Read[map[string]string](userName, storage.TokenTypeItc)
 	if e == nil {
-		api.token = *t
+		api.cookies = util.MapToCookieHeader(*t)
 	}
 	return api
 }
@@ -39,16 +40,8 @@ func (c *DevApiV1) itcTokenHeader() map[string]string {
 		"X-Requested-With": "XMLHttpRequest",
 		"X-Csrf-Itc":       "itc",
 	}
-	if c.token != nil {
-		itcHeader["Cookie"] = mapToCookieHeader(c.token)
+	if c.cookies != "" {
+		itcHeader["Cookie"] = c.cookies
 	}
 	return itcHeader
-}
-
-func mapToCookieHeader(m map[string]string) string {
-	cookie := ""
-	for k, v := range m {
-		cookie = cookie + k + "=" + v + "; "
-	}
-	return strings.TrimSpace(strings.Trim(cookie, ";"))
 }

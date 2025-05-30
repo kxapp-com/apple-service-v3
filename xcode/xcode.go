@@ -54,8 +54,6 @@ func (client *Client) Login(authInfo AuthInfo) *httpz.HttpResponse {
 
 	if client.IsSessionAlive() {
 		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
-		//log.Info("login success")
-		//return errorz.SuccessStatusResult(nil)
 	}
 	return client.CheckPassword()
 }

@@ -20,6 +20,7 @@ func main() {
 
 	client := fastapple.NewAppleAuthClient()
 	account := "877028320@qq.com"
+	fmt.Println(fastapple.IsSessionAlive(account))
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})

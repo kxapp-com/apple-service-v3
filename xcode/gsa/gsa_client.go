@@ -42,8 +42,8 @@ func Login(username, password string, data *appuploader.AnisseteData) (*GSACompl
 	if e != nil {
 		return nil, e
 	}
-	key := srp.PbkPassword(password, resp.Salt, resp.IterationCount, resp.SeverProto != "s2k")
-	sRPClient.ProcessClientChanllenge([]byte(username), key, resp.Salt, resp.SRPB)
+	hashedPassword := srp.PbkPassword(password, resp.Salt, resp.IterationCount, resp.SeverProto != "s2k")
+	sRPClient.ProcessClientChanllenge([]byte(username), hashedPassword, resp.Salt, resp.SRPB)
 	if len(sRPClient.M1) == 0 {
 		return nil, errorz.NewInternalError("calculate m1 fail ,internal error")
 	}

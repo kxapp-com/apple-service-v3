@@ -1,9 +1,7 @@
 package fastapple
 
 import (
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
@@ -11,8 +9,6 @@ import (
 	"github.com/appuploader/apple-service-v3/srp"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/appuploader/apple-service-v3/util"
-	"golang.org/x/crypto/pbkdf2"
-	"hash"
 	"net/http"
 	"strconv"
 	"strings"
@@ -57,15 +53,18 @@ func NewAppleAuthClient() *IdmsaClient {
 func (c *IdmsaClient) Login(username string, password string) *httpz.HttpResponse {
 	username = strings.ToLower(username) //srp挑战的时候发现其js代码里面有tolowcase
 	c.username = username
-	var srpPassword = func(h func() hash.Hash, protocol string, password string, salt []byte, iterationcount int) []byte {
-		hashPass := sha256.New()
-		hashPass.Write([]byte(password))
-		var digest = hashPass.Sum(nil)
-		if protocol == "s2k_fo" {
-			digest = []byte(hex.EncodeToString(digest))
-		}
-		return pbkdf2.Key(digest, salt, iterationcount, h().Size(), h)
+	if IsSessionAlive(username) {
+		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
 	}
+	//var srpPassword = func(h func() hash.Hash, protocol string, password string, salt []byte, iterationcount int) []byte {
+	//	hashPass := sha256.New()
+	//	hashPass.Write([]byte(password))
+	//	var digest = hashPass.Sum(nil)
+	//	if protocol == "s2k_fo" {
+	//		digest = []byte(hex.EncodeToString(digest))
+	//	}
+	//	return pbkdf2.Key(digest, salt, iterationcount, h().Size(), h)
+	//}
 	srpClient := srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	basedA := base64.StdEncoding.EncodeToString(srpClient.GetA())
 	initRequestBody := map[string]interface{}{
@@ -91,7 +90,9 @@ func (c *IdmsaClient) Login(username string, password string) *httpz.HttpRespons
 	json.Unmarshal(initResponse.Body, &initResponseBody)
 	saltData, _ := base64.StdEncoding.DecodeString(initResponseBody.Salt)
 	bData, _ := base64.StdEncoding.DecodeString(initResponseBody.B)
-	hashedPassword := srpPassword(sha256.New, initResponseBody.Protocol, password, saltData, initResponseBody.Iteration)
+	//hashedPassword := srp.PbkPassword(initResponseBody.Protocol, password, saltData, initResponseBody.Iteration)
+	hashedPassword := srp.PbkPassword(password, saltData, initResponseBody.Iteration, initResponseBody.Protocol != "s2k")
+
 	srpClient.ProcessClientChanllenge([]byte(username), hashedPassword, saltData, bData)
 	srpResult := map[string]any{
 		"accountName": username,

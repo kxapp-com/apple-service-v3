@@ -99,3 +99,10 @@ func MakeAppleHashCash(bits int, challenge string) string {
 		counter++
 	}
 }
+func MapToCookieHeader(m map[string]string) string {
+	cookie := ""
+	for k, v := range m {
+		cookie = cookie + k + "=" + v + "; "
+	}
+	return strings.TrimSpace(strings.Trim(cookie, ";"))
+}
