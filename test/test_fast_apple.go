@@ -13,6 +13,7 @@ func main() {
 	account := "877028320@qq.com"
 	if fastapple.IsSessionAlive(account) {
 		fmt.Printf("session is alive for account %s\n", account)
+		onSuccess(account)
 		return
 	}
 	client := fastapple.NewAppleAuthClient()

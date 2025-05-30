@@ -39,14 +39,15 @@ func NewAppleAuthClient() *IdmsaClient {
 		"Accept":             "application/json, text/javascript",
 		"Accept-Encoding":    "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
 	}
-	jar, _ := cookiejar.New(nil)
-	hClient := httpz.NewHttpClient(jar)
 	return &IdmsaClient{
-		httpClient:  hClient,
 		baseHeaders: headers,
 	}
 }
 
+//func (c *IdmsaClient)IsSessionAlive()bool  {
+//	r:=httpz.Get("https://developer.apple.com/services-account/QH65B2/v1/profile", nil).ContentType(httpz.ContentType_JSON).Request(c.httpClient)
+//	return !r.HasError() && r.Status == http.StatusOK
+//}
 /*
 登录，返回409，或者token
 */
@@ -56,15 +57,8 @@ func (c *IdmsaClient) Login(username string, password string) *httpz.HttpRespons
 	if IsSessionAlive(username) {
 		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
 	}
-	//var srpPassword = func(h func() hash.Hash, protocol string, password string, salt []byte, iterationcount int) []byte {
-	//	hashPass := sha256.New()
-	//	hashPass.Write([]byte(password))
-	//	var digest = hashPass.Sum(nil)
-	//	if protocol == "s2k_fo" {
-	//		digest = []byte(hex.EncodeToString(digest))
-	//	}
-	//	return pbkdf2.Key(digest, salt, iterationcount, h().Size(), h)
-	//}
+	c.httpClient = NewHttpClientWithJar(username)
+
 	srpClient := srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 	basedA := base64.StdEncoding.EncodeToString(srpClient.GetA())
 	initRequestBody := map[string]interface{}{
@@ -360,15 +354,21 @@ func (c *IdmsaClient) FetchItcCookies() *httpz.HttpResponse {
 	return response
 }
 func (c *IdmsaClient) saveCookiesToFile() error {
-	cookies := c.httpClient.Jar.(*cookiejar.Jar).AllCookies()
-	cookieValues := map[string]string{}
-	for _, cookie := range cookies {
-		if strings.Index(cookie.Domain, "apple.com") < 0 {
-			continue
-		}
-		cookieValues[cookie.Name] = cookie.Value
+	j := c.httpClient.Jar.(*cookiejar.Jar)
+	d, e := j.ToJSON()
+	if e != nil {
+		return e
 	}
-	return storage.Write(c.username, storage.TokenTypeItc, cookieValues)
+	return storage.WriteFile(storage.TokenPath(c.username, storage.TokenTypeItc), d)
+	//cookies := c.httpClient.Jar.(*cookiejar.Jar).AllCookies()
+	//cookieValues := map[string]string{}
+	//for _, cookie := range cookies {
+	//	if strings.Index(cookie.Domain, "apple.com") < 0 {
+	//		continue
+	//	}
+	//	cookieValues[cookie.Name] = cookie.Value
+	//}
+	//return storage.Write(c.username, storage.TokenTypeItc, cookieValues)
 }
 
 func (c *IdmsaClient) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {

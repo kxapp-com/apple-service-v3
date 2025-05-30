@@ -2,23 +2,38 @@ package fastapple
 
 import (
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/storage"
-	"github.com/appuploader/apple-service-v3/util"
+	"io"
 	"net/http"
+	"strings"
 )
 
 func IsSessionAlive(userName string) bool {
-	t, e := storage.Read[map[string]string](userName, storage.TokenTypeItc)
-	if e != nil || t == nil {
-		return false
+	r, e := NewHttpClientWithJar(userName).Get("https://developer.apple.com/services-account/QH65B2/v1/profile")
+	if e == nil && r.StatusCode == http.StatusOK {
+		v, e2 := io.ReadAll(r.Body)
+		if e2 != nil {
+			return false
+		}
+		ss := string(v)
+		if strings.Contains(ss, "session has expired") {
+			return false
+		}
+		return true
 	}
-	r := sendCheckRequest(util.MapToCookieHeader(*t))
-	return !r.HasError() && r.Status == http.StatusOK
+	return false
 }
-func sendCheckRequest(cookieString string) *httpz.HttpResponse {
-	headers := map[string]string{
-		"User-Agent": httpz.UserAgent_GoogleChrome,
-		"Cookie":     cookieString,
+func NewHttpClientWithJar(username string) *http.Client {
+	username = strings.ToLower(username)                                              //srp挑战的时候发现其js代码里面有tolowcase
+	cookies, e := storage.ReadFile(storage.TokenPath(username, storage.TokenTypeItc)) //读取token文件，判断是否存在
+	if e == nil && len(cookies) > 0 {
+		jar := cookiejar.NewJarFromJSON(cookies)
+		hClient := httpz.NewHttpClient(jar)
+		return hClient
+	} else {
+		jar, _ := cookiejar.New(nil)
+		hClient := httpz.NewHttpClient(jar)
+		return hClient
 	}
-	return httpz.Get("https://developer.apple.com/services-account/QH65B2/v1/profile", headers).ContentType(httpz.ContentType_JSON).Request(httpz.NewHttpClient(nil))
 }
