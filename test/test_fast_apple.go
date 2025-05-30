@@ -9,8 +9,18 @@ import (
 )
 
 func main() {
+	//jar, _ := cookiejar.New(nil)
+	////jar := http.DefaultClient.Jar
+	//hClient := httpz.NewHttpClient(jar)
+	//r2 := httpz.NewHttpRequestBuilder(http.MethodGet, "https://idmsa.apple.com/IDMSWebAuth/signin?appIdKey=891bd3417a7776362562d2197f89480a8547b108fd934911bcbea0110d07f757&path=%2Faccount%2F&rv=1").Request(hClient)
+	//u, _ := url.Parse("https://www.apple.com")
+	//cookies := hClient.Jar.Cookies(u)
+	//v := r2.Header.Get("Set-Cookie")
+	//fmt.Println(r2, cookies, v)
+
 	client := fastapple.NewAppleAuthClient()
-	r := client.Login("877028320@qq.com", "MzdJzm38")
+	account := "877028320@qq.com"
+	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@gmail.com", Password: "MzdJzm38"})
@@ -22,23 +32,7 @@ func main() {
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
-		t := client.ViewTeams()
-		fmt.Println(t.Status, string(t.Body))
-		apiClient := xcode.NewDevApiV1(client)
-		apiClient.TeamId = "CS2ADD9F7F"
-		//apiClient.TeamId = t.Body.(*xcode.ViewTeamsResponse).Teams[0].TeamId
-		t = apiClient.ListDevices()
-		fmt.Println(t.Status, string(t.Body))
-		t = apiClient.ListBundleID()
-
-		fmt.Println(t.Status, string(t.Body))
-		//if e == nil {
-		//	for _, v := range *t {
-		//		fmt.Printf(v.Name)
-		//	}
-		//} else {
-		//	fmt.Printf(e.Error())
-		//}
+		onSuccess(account)
 	} else if r.Status == 401 {
 		fmt.Printf("login failed")
 	} else if r.Status == 409 {
@@ -48,16 +42,7 @@ func main() {
 			fmt.Printf("load device failed %+v %v\n", deviceResult.Error, deviceResult.Body)
 			return
 		}
-		//if deviceResult.Status != 0 {
-		//	fmt.Printf("load device failed %+v\n", deviceResult)
-		//	return
-		//}
-		//td := deviceResult.Body.(*xcode.TwoStepDevicesResponse)
 		tdStatus := deviceResult.Status
-		//if deviceResult.Status == 401 {
-		//	fmt.Printf("login failed with 401 %+v\n", deviceResult)
-		//	return
-		//}
 		fmt.Printf("load device success\n")
 		fmt.Printf("%+v", deviceResult)
 		var phoneId = "3"
@@ -77,8 +62,7 @@ func main() {
 				fmt.Println(verifyResult)
 			}
 			if verifyResult.Status == 200 {
-				vvv := client.ViewTeams()
-				fmt.Println(vvv)
+				onSuccess(account)
 			}
 		} else if tdStatus == 200 {
 			fmt.Println("please input device id")
@@ -107,8 +91,7 @@ func main() {
 					fmt.Println(verifyResult)
 				}
 				if verifyResult.Status == 200 {
-					vvv := client.ViewTeams()
-					fmt.Println(vvv)
+					onSuccess(account)
 				}
 			} else {
 				fmt.Printf("request code failed %+v", requestCodeResult)
@@ -121,4 +104,9 @@ func main() {
 		fmt.Printf("%+v", r)
 	}
 	time.Sleep(time.Minute * 5)
+}
+func onSuccess(account string) {
+	a := fastapple.NewDevApiV1(account)
+	t := a.GetItcTeams()
+	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
 }

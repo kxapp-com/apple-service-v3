@@ -1,0 +1,895 @@
+POST /appleauth/auth/signin/init HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+X-Apple-Widget-Key: e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42
+Accept: application/json, text/javascript
+Cookie: aasp=5806E6B22A5E2A1382A71887E077D4135756CCAD3082B66893C681E972BABF9B5D0F64EEAC9DB9F2C6420C33FC252981527EF16C454766D5BFBDFBB504CF0FA4516C4B8825C6AD43819E4CC3486691B80B65856FD7C23F01B20CDB3CA6D448DC9CB0BBEA3E5BFAE17831B4DBA3CE10B42768674AAFC6919A; dslang=US-EN; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Host: idmsa.apple.com
+Content-Length: 418
+
+{"a":"N6FLiHqcXP+LEWtG9el9t1H3YyWg1kL9UhOwZzJrICFrzl7t8R+uvSoKbEXev0yfHCqHmhDnH1W1gBhuW5BOqY9vk/4YDiEbvZwAQRPbTVxSAJ0ggXJyW1mHjBqWXDWI82ukhWjUmW3XqXp8laVpU5xDqN50/NrZDZa5dLd5iRDRaRYaOCEReOHDM4zCDMnsh8DO4UlapashRIpOLp6DpyTqt/3VoBN1ydTYG3/eiUBPw0EBiC9yxmBwGF6S/aRhO2HiEmAQDF7GTE9kcXf5msFamw3uIbNMTAiEP6DrYcHRcKanF+FkFymbEySmEfU3QnxFUOytGBGGJuk1yPRT8Q==","accountName":"yanwen1688@gmail.com","protocols":["s2k","s2k_fo"]}
+
+HTTP/1.1 200 
+Server: Apple
+Date: Thu, 29 May 2025 13:06:51 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+X-Apple-I-Request-ID: c91de4da-3c8d-11f0-8800-6db87e329f18
+X-FRAME-OPTIONS: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-jU4MDZFNkIyMkE1RTJBMTM4MkE3MTg4N0UwNzdENDEzNTc1NkNDQUQzMDgyQjY2ODkzQzY4MUU5NzJCQUJGOUI1RDBGNjRFRUFDOURCOUYyQzY0MjBDMzNGQzI1Mjk4MTUyN0VGMTZDNDU0NzY2RDVCRkJERkJCNTA0Q0YwRkE0NTE2QzRCODgyNUM2QUQ0MzgxOUU0Q0MzNDg2NjkxQjgwQjY1ODU2RkQ3QzIzRjAxQjIwQ0RCM0NBNkQ0NDhEQzlDQjBCQkVBM0U1QkZBRTE3ODMxQjREQkEzQ0UxMEI0Mjc2ODY3NEFBRkM2OTE5QXwyAAABlxw0yeqPDF-rFV5qsXdTX77CbrWwARAP3Rcq2oVbF7o9VSKnsxViMrscilLmACH7OOvY-3n4Vo9Yi0clmpAu_1V9zplJHrFefLUWTYTwYEkjRhVRIQ
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Cache-Control: no-store
+Cache-Control: no-store
+vary: accept-encoding
+Content-Encoding: gzip
+Content-Language: en-US-x-lvariant-USA
+Connection: keep-alive
+
+{
+  "iteration" : 20073,
+  "salt" : "asT3uMi1IpOBeKoemtYDMQ==",
+  "protocol" : "s2k",
+  "b" : "lRilU25iFYsw5Wpxj1n88L72gtveMXgkpHKS99w1hujWSk8pEtYxCgcDoZpDu7w7HRdkJqehXi59hW+7Mwq/SK4ztZNEQyT8Bjay7GlXmrRMKRgyICVKOazifZCvPwhk5I5nALvsz1b1hyOZb7q0yQBgdhjWbBzrXT5RNvGh/xxCCGMa+6QS3ljalAUpX/2mr6VRo1XuKkHQmEkc44+U3rwywkeekhptjG0zRiRJ3TXayp8WJ2hnppxb3W7MueRRcQ4Vn9Q49imI2WXIceyyNxLZkuGWOnUkPYXi0mAc+69chNLFkRsQ3Ey3UAH3YNqooffIVhPT5G1lJM515rfD4g==",
+  "c" : "d-d8-c925faea-3c8d-11f0-999c-1993c626367f:NC"
+}
+//---------------------------------
+GET /appleauth/auth/signin?widgetKey=e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42 HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+Cookie: aasp=5806E6B22A5E2A1382A71887E077D4135756CCAD3082B66893C681E972BABF9B5D0F64EEAC9DB9F2C6420C33FC252981527EF16C454766D5BFBDFBB504CF0FA4516C4B8825C6AD43819E4CC3486691B80B65856FD7C23F01B20CDB3CA6D448DC9CB0BBEA3E5BFAE17831B4DBA3CE10B42768674AAFC6919A; dslang=US-EN; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Accept: */*
+Host: idmsa.apple.com
+
+HTTP/1.1 200 
+Server: Apple
+Date: Thu, 29 May 2025 13:06:53 GMT
+Content-Type: text/html;charset=UTF-8
+Transfer-Encoding: chunked
+X-Apple-I-Request-ID: cab1cb30-3c8d-11f0-a450-399b6503bdd8
+X-FRAME-OPTIONS: ALLOW-FROM https://itunesconnect.apple.com
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;  frame-ancestors 'self' https://itunesconnect.apple.com;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-jU4MDZFNkIyMkE1RTJBMTM4MkE3MTg4N0UwNzdENDEzNTc1NkNDQUQzMDgyQjY2ODkzQzY4MUU5NzJCQUJGOUI1RDBGNjRFRUFDOURCOUYyQzY0MjBDMzNGQzI1Mjk4MTUyN0VGMTZDNDU0NzY2RDVCRkJERkJCNTA0Q0YwRkE0NTE2QzRCODgyNUM2QUQ0MzgxOUU0Q0MzNDg2NjkxQjgwQjY1ODU2RkQ3QzIzRjAxQjIwQ0RCM0NBNkQ0NDhEQzlDQjBCQkVBM0U1QkZBRTE3ODMxQjREQkEzQ0UxMEI0Mjc2ODY3NEFBRkM2OTE5QXwzAAABlxw01EF9GkZfpjQ9TrZwBHDc-sVustjfv92_3GZcktU39n43wXXun0Kb0Tj7ACIk4Wlvg-PCdpiagKGB4GzI45rok-ftbjhxN2w87C3cReq-wnVAuw
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Cache-Control: no-store
+X-Apple-Auth-Attributes: 3vvCrcLPJTpocNpR89oAIiTha+euoA==
+X-Apple-HC-Bits: 10
+X-Apple-HC-Challenge: 9e9622ae8a1f371347207f3ef1bb3329
+Set-Cookie: aasp=F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A; Domain=idmsa.apple.com; Path=/; Secure; HttpOnly
+vary: accept-encoding
+Content-Encoding: gzip
+Content-Language: en-US-x-lvariant-USA
+Connection: keep-alive
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+<!DOCTYPE html>
+
+    
+    
+        <html dir="ltr" data-rtl="false" lang="en">
+    
+
+<head>
+    <title></title>
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script type="application/json" id="app_config">
+    {
+        "i18n": 
+    
+    
+    {"web.auth.oauth2.error.photo.more.detail.apple.support.link.text":"Apple Support.","web.auth.oauth2.open.in.new.window.sr.only":"Opens in a new window.","web.auth.external.profile.error.required.2.factor.title":"Two-Factor Authentication Required","web.auth.external.profile.error.u13.title":"Sign in with Apple not supported","web.auth.oauth2.error.no.apple.card.title":"Apple Card Not Found","web.auth.oauth2.error.photo.no.access.title":"Turn on iCloud Photos","web.auth.oauth2.error.photo.no.access.description":"To import photos and videos, turn on iCloud Photos before continuing.","web.auth.oauth2.error.photo.age.limit.title":"Data Import Not Available","web.auth.oauth2.error.not.allow.country.title":"Not Available","web.auth.oauth2.error.not.allow.country.description":"This service is not supported for your country or region. Try using a different Apple Account.","web.auth.oauth2.error.photo.invalid.country.for.legacy.users.title":"Not Available","web.auth.oauth2.error.photo.can.not.imported.title":"Your data can’t be imported at this time.","web.auth.oauth2.error.photo.more.detail.email.to.support.link.text":"privacy.deletions@apple.com.","web.auth.oauth2.error.photo.more.detail.email.to.support.descrpition":"For more details, contact {0:emailSupportLink}","web.auth.oauth2.error.photo.more.detail.descrpition":"For more details, contact {0:appleSupportLink}","web.auth.oauth2.error.request.cannot.be.completed.title":"Your request can’t be completed.","web.auth.oauth2.error.generic.error.description":"Unable to sign in to your Apple Account.","web.auth.oauth2.error.turn.off.access.description":"Your request can’t be completed because you turned off Access iCloud Data on the Web.","web.auth.oauth2.error.data.protection.turn.on.description":"Your request can’t be completed because you have Advanced Data Protection turned on.","web.auth.oauth2.error.concurrent.requests":"There’s already a request in progress for that Apple Account.","web.tryAgainLater.text":"Try again later.","web.auth.oauth2.error.require.two.factor":"Transferring data to Apple requires that you set up two-factor authentication for your Apple Account.","web.auth.oauth2.error.music.max.playlists.reached.description":"You already have the maximum number of playlists. To import more, you’ll need to remove some playlists from Apple Music.","web.auth.oauth2.error.music.max.no.subscription.description":"To import playlists, subscribe to Apple Music. If you have a subscription, sign in to your Apple Music account.","web.auth.oauth2.error.photo.request.to.tranfers.data.title":"Request to Transfer Data","web.auth.oauth2.error.no.icloud.mail.title":"No iCloud Mail address","web.auth.oauth2.error.no.icloud.mail":"We couldn’t find an iCloud Mail address associated with this account. You can create a new iCloud Mail address on your Mac, iPhone, or on the web by going to icloud.com\/mail.","web.footer.verifyCode.popover.label.sr.only":"Other options","web.trustMyBrowser.sa.info":"If you choose to trust this browser, you will not be required to answer security questions the next time you sign in.","web.trustMyBrowser.2fa.info":"If you choose to trust this browser, you will not be asked for a verification code the next time you sign in.","web.trustMyBrowser.notNow":"Not Now","web.error.fallback":"Failed to verify your identity. Try again.","web.placeholder.appleid":"Apple Account","web.placeholder.account":"Account","web.error.unknown.title":"Unexpected error occurred.","web.error.account.locked.webAuthnNotSupported.title":"Cannot Verify Identity","web.error.account.locked.noDevicesRKNotAllowed.title":"Sign-In temporarily Disabled","web.aria.repair.iframeTitle":"Apple Account Repair","web.auth.oauth2.error.no.apple.card.description.learnmore.url":"https:\/\/www.apple.com\/apple-card\/","web.auth.oauth2.error.no.apple.card.description.learnmore.link.text":"Learn how to apply","web.auth.oauth2.error.no.apple.card.description.support.url":"https:\/\/support.apple.com\/apple-card","web.auth.oauth2.error.no.apple.card.description.support.link.text":"Apple Card support","web.auth.oauth2.error.no.apple.card.description2":"{0:learnMoreLink}   {1:supportLink}","web.signin.desription.security.key.login.successful.enter.credentials":"Security key login succeeded. Enter your credentials to continue.","webAuthn.browser.doesnot.support.security.keys.enter.password.error.message":"This browser doesn’t support FIDO2 security keys. Enter password to continue.","webAuthn.authentication.method.not.supported.browser.error.message":"This authentication method is not supported by your browser.","web.signInLabelWithAppName":"Sign In to {0}","web.footer.siginin.link.createAppleID":"Create yours \u003Cspan class=\"no-wrap sk-icon sk-icon-after sk-icon-external\"\u003Enow.\u003C\/span\u003E","widget.signin.v2.footer.link.createAppleAccount":"Create Your Apple Account","web.text.forgotPassword":"Forgot password?","web.federated.intermediaryIntroPage.title":"Apple Account for {0}","web.federated.intermediaryIntroPage.text":"Continue to {0} to sign in to your {1} account.","web.auth.external.profile.pageTitle.appleaccount":"Sign in to Apple Account","web.suppressIforgot.forgotPassword.text":"Contact your organization’s Administrator or Manager and ask them to reset the password for your Managed Apple Account.","web.challenge.too.many.verification.attempts.title":"Too many incorrect verification attempts","web.challenge.too.many.verification.attempts.body":"You have made too many attempts to answer your security questions. You can try again later.","web.text.cancel":"Cancel","web.challenge.reset.button":"Reset Security Questions","web.challenge.canNotGenerateResetQuestionURL.text":"Your request could not be completed because of an error.","widget.signin.not.completed.try.again":"Sign-in couldn\'t be completed. Try again.","webAuthn.browser.doesnot.support.security.keys.error.message":"This browser doesn’t support FIDO2 security keys.","widget.signin.with.privacy.text":"Your Apple Account information is used to allow you to sign in securely and access your data. Apple records certain data for security, support, and reporting purposes. If you agree, Apple may also use your Apple Account information to send you marketing emails and communications, including based on your use of Apple services.","widget.signin.with.privacy.text.link":"See how your data is managed...","web.button.text.continue":"Continue","web.text.forgotPassword.link":"Forgot \u003Cspan class=\"no-wrap sk-icon sk-icon-after sk-icon-external\"\u003Epassword?\u003C\/span\u003E","widget.signin.v2.privacy.consent.v1":"Your Apple Account information is used to allow you to sign in securely and access your data. Apple records certain data for security, support, and reporting purposes. If you agree, Apple may also use your Apple Account information to send you marketing emails and communications, including based on your use of Apple services. \u003Ca target=\"_blank\" href=\"https:\/\/www.apple.com\/legal\/privacy\/data\/en\/apple-id\/\"\u003ESee how your data is managed...\u003Cspan class=\"sr-only\"\u003E Opens in a new window.\u003C\/span\u003E\u003C\/a\u003E ","web.text.verifying":"Verifying…","widget.signin.v2.signin.button.text":"Sign In","widget.swp.continue.with.phone.button":"Sign in with Passkey","widget.swp.continue.with.phone.button.ios.description":"Requires iOS 17 or macOS Sonoma.","widget.swp.continue.with.phone.button.macos.description":"Requires macOS Sonoma or iOS 17.","widget.swp.continue.with.phone.button.description":"Requires a device with iOS 17.","web.default.signInLabel":"Sign In to your Apple Account","web.text.useAppleConnect":"\u003Ca target=\"_parent\" id=\"appleConnectUrl\" class=\"si-link ax-outline thin \" href=\"{0}\"\u003EContinue to sign in\u003C\/a\u003E with AppleConnect.","web.aria.signIn":"Sign In","web.aria.close":"Close","web.sign.in.with.security.key":"Sign in with security key…","web.footer.copyright":"Copyright &#169; {0} Apple Inc. All rights reserved.","web.footer.termsOfUse":"Terms of Use","web.footer.privacyPolicy":"Privacy Policy","web.footer.appleConnectAvailable":"Sign in with your AppleConnect account","web.footer.siginin.dontHaveAppleID":"Don’t have an Apple Account?","web.footer.siginin.link.forgotAccount":"Forgot account or \u003Cspan class=\"no-wrap sk-icon sk-icon-after sk-icon-external\"\u003Epassword?\u003C\/span\u003E","web.footer.siginin.link.forgotPassword":"Forgot \u003Cspan class=\"no-wrap sk-icon sk-icon-after sk-icon-external\"\u003Epassword?\u003C\/span\u003E","web.footer.siginin.link.forgotAppleID":"Forgot \u003Cspan class=\"no-wrap sk-icon sk-icon-after sk-icon-external\"\u003Epassword?\u003C\/span\u003E","web.button.text.back":"Back","web.text.ok":"OK","web.auth.external.profile.error.required.2.factor.learn.more.button":"Learn More","web.auth.oauth2.error.photo.request.to.tranfers.data.continue.button.text":"Continue...","web.button.text.cancel":"Cancel","web.auth.external.profile.button.done":"Done","web.auth.oauth2.error.no.apple.card.description":"The Apple Account you entered is not associated with an Apple Card. If you’re trying to sign in to your existing Apple Card account, try a different Apple Account. To apply for Apple Card, use the Wallet app on your iPhone.","web.auth.external.profile.error.required.2.factor.description":"Sign in with Apple requires two-factor authentication. You can turn on two-factor authentication for your Apple Account from an iOS device or a Mac.","web.auth.external.profile.error.required.2.factor.description.ios.title":"See instructions for an iOS device","web.auth.external.profile.error.required.2.factor.description.ios.instruction.v10.3.title":"If you’re using iOS 10.3 or later:","web.auth.external.profile.error.required.2.factor.description.ios.instruction.v10.3.text1":"Go to Settings \u003E [your name] \u003E Password & Security.","web.auth.external.profile.error.required.2.factor.description.ios.instruction.v10.3.text2":"Tap Turn On Two-Factor Authentication.","web.auth.external.profile.error.required.2.factor.description.ios.instruction.v10.3.text3":"Tap Continue.","web.auth.external.profile.error.required.2.factor.description.mac.title":"See instructions for a Mac","web.auth.external.profile.error.required.2.factor.description.mac.instruction.capitan.title":"Follow these steps on your Mac with macOS Catalina or later:","web.auth.external.profile.error.required.2.factor.description.mac.instruction.capitan.text1":"Go to Apple ( \u003Ci aria-hidden=\"true\" style=\"font-size: 12px;\" class=\"icon icon_apple\"\u003E\u003C\/i\u003E ) menu \u003E System Preferences or System Settings \u003E Apple Account \u003E Overview.","web.auth.external.profile.error.required.2.factor.description.mac.instruction.capitan.text3":"Click Turn On Two-Factor Authentication.","signing.in.with.appleconnect.in.progress":"Signing in with AppleConnect...","signing.in.with.appleconnect":"Sign in with AppleConnect","signing.in.with.appleconnect.attempt.canceled":"Your sign in attempt was canceled.","signing.in.with.appleconnect.signin.button":"Sign In","signing.in.with.appleconnect.approved.device.not.found":"Approved Device not found.","signing.in.with.appleconnect.two.factor.requirements":"2-factor authentication is required for your account. Please ensure AppleConnect is installed, the AppleConnect Safari\/Chrome extension is enabled, and you are using an Approved Device.","signing.in.with.appleconnect.retry":"Retry","signing.in.with.appleconnect.acmobile.instructions.not.configured.heading":"AppleConnect Not Configured","signing.in.with.appleconnect.acmobile.instructions.not.configured.subheading":"Please make sure you are enrolled in Self Service and the Connect app is installed. If Connect is missing, open the Self Service app and install Connect manually.","signing.in.with.appleconnect.acmobile.instructions.enrollInSelfService.button":"Enroll in Self Service...","web.error.unknown.description":"Your request could not be completed because of an error. Please try again later.","web.error.unknown.description.sign.in.again":"Your request could not be completed because of an error. Please sign in to your Apple Account.","web.error.account.locked.resetInfo":"You must unlock your account before signing in.","web.error.accountLocked":"You have made too many attempts to verify your identity. You must unlock your account to continue.","web.error.account.locked.noDevicesNoRK.text":"Your sign in cannot be completed because you have no trusted devices listed for your account. Visit the Apple Account site and use your Recovery Key to add trusted devices.","webAuthn.authentication.notSupported":"Your sign in cannot be completed because your browser does not support security keys.","web.error.account.locked.noDevicesRKNotAllowed.text":"There have been too many unsuccessful sign-in attempts for your account. To protect your account, sign-in has been disabled for 8 hours."}
+  
+    }
+</script>
+    
+        
+            
+
+
+
+    
+    
+    
+    
+    
+    
+    
+
+<link rel="stylesheet"  href="https://www.apple.com/wss/fonts?families=SF+Pro,v3|SF+Pro+Icons,v3" type="text/css"/>
+
+
+        
+    
+    
+  
+  
+    
+      
+      
+        
+          
+          
+          
+            
+              
+<link rel="stylesheet" href="https://appleid.cdn-apple.com/appleauth/static/module-assets/home-0a4ec94247bf957a390a.css"/>
+            
+            <link rel="stylesheet" type="text/css" media="screen" href="https://appleid.cdn-apple.com/appleauth/static/cssj/1120317489/widget/auth/app-sk7.css" />
+
+          
+        
+      
+    
+  
+
+    
+        
+        
+            <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsj/1964430452/common-header.js" ></script>
+
+        
+    
+
+    
+</head>
+
+<body class="tk-body ">
+<div aria-hidden="true" style='font-family:"SF Pro Icons"; width: 0px; height: 0px; color: transparent;'>.</div>
+<div aria-hidden="true" style='font-family:"SF Pro Display"; width: 0px; height: 0px; color: transparent;'>.</div>
+<div class="si-body si-container container-fluid" id="content" role="main" aria-labelledby="contentheader">
+</div>
+
+
+    
+    
+    
+    
+    
+
+    
+  <script type="text/stache" id="jstache_570314101">
+    
+          
+          
+          
+          
+          
+          <div class="graphite-icon {{symbolName}} {{symbolType}}{{#if wrapperClasses}} {{wrapperClasses}}{{/if}}" aria-live="assertive">
+    {{#is symbolName "arrow-left-circle"}}
+      <svg id="arrowLeftCircle" data-name="arrow-left-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110"><g id="Semibold-M"><path d="M55,106.05A51.33,51.33,0,0,0,106,55,51.32,51.32,0,0,0,55,4a51.05,51.05,0,0,0,0,102.1Zm0-11.47A39.58,39.58,0,1,1,94.6,55,39.45,39.45,0,0,1,55,94.58ZM29.71,55a5.3,5.3,0,0,0,1.8,4L48.16,75.14a4.32,4.32,0,0,0,3.28,1.32,4.19,4.19,0,0,0,4.24-4.39,4.36,4.36,0,0,0-1.41-3.28l-5.76-5.37-5.18-4,9.77.49H75.7a4.94,4.94,0,0,0,0-9.87H53.1l-9.77.49,5.22-4,5.72-5.37a4.53,4.53,0,0,0,1.41-3.27,4.15,4.15,0,0,0-4.24-4.35,4.32,4.32,0,0,0-3.28,1.32L31.51,51A5.25,5.25,0,0,0,29.71,55Z"/></g></svg>
+    {{/is}}
+
+    {{#is symbolName "exclamationmark-triangle-fill"}}
+      <svg id="exclamationMark" data-name="exclamationmark-triangle-fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110"><g id="Semibold-M"><path d="M16.74,102.19H93.26A12.55,12.55,0,0,0,106.15,89.3,13.1,13.1,0,0,0,104.44,83L66.11,14.4A12.46,12.46,0,0,0,55,7.81,12.61,12.61,0,0,0,43.89,14.4L5.56,83a12.89,12.89,0,0,0-1.71,6.3A12.55,12.55,0,0,0,16.74,102.19ZM55.07,67.91c-3.17,0-5-1.75-5.12-4.93l-.74-22.7c-.14-3.37,2.25-5.67,5.81-5.67s6,2.35,5.81,5.72l-.78,22.6C60,66.21,58.15,67.91,55.07,67.91Zm0,17.24c-3.61,0-6.49-2.39-6.49-5.86s2.88-5.91,6.49-5.91,6.45,2.45,6.45,5.91S58.64,85.15,55.07,85.15Z"/></g></svg>
+    {{/is}}
+
+    {{#is symbolName "checkmark"}}
+      <svg id="checkmark" data-name="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110"><g id="Bold-M"><path d="M45.09,98.63a9.05,9.05,0,0,0,8-4L98.51,25.29a10.28,10.28,0,0,0,1.85-5.67,8.15,8.15,0,0,0-8.49-8.25c-3.33,0-5.42,1.22-7.48,4.4l-39.5,62.3-20-24.56a8,8,0,0,0-6.74-3.22,8.13,8.13,0,0,0-8.49,8.3,8.6,8.6,0,0,0,2.49,6.1L37.32,95A9.52,9.52,0,0,0,45.09,98.63Z"/></g></svg>
+    {{/is}}
+
+    {{#is symbolName "exclamationmark-circle-fill"}}
+      <svg id="exclamationmark-circle-fill" data-name="exclamationmark-circle-fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110"><g id="Semibold-M"><path d="M55,106.05A51.33,51.33,0,0,0,106,55,51.32,51.32,0,0,0,55,4a51.05,51.05,0,0,0,0,102.1Zm0-43.26c-3.17,0-5-1.76-5.13-4.93l-.73-22.71C49,31.83,51.39,29.49,55,29.49s6,2.34,5.86,5.71L60,57.81C59.88,61.08,58.08,62.79,55,62.79ZM55,80c-3.61,0-6.49-2.39-6.49-5.86s2.88-5.9,6.49-5.9,6.45,2.44,6.45,5.9S58.56,80,55,80Z"/></g></svg>
+    {{/is}}
+
+    {{#is symbolName "arrow-left-circle-fill"}}
+      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112"><g id="Regular-M" transform="matrix(1 0 0 1 1391.3 1126)"><path d="M-1335.30029-1020.19531c27.24609,0,49.80518-22.55859,49.80518-49.80469
+        c0-27.19727-22.60779-49.80469-49.854-49.80469c-27.19727,0-49.75586,22.60742-49.75586,49.80469
+        C-1385.10498-1042.75391-1362.49744-1020.19531-1335.30029-1020.19531z M-1363.76709-1070.04883
+        c0-1.17188,0.39075-2.14844,1.5625-3.27148l18.70117-18.70117c0.73242-0.73242,1.70911-1.12305,2.88098-1.12305
+        c2.29492,0,4.10144,1.75781,4.10144,4.05273c0,1.17188-0.58582,2.24609-1.26941,2.92969l-6.88489,6.83594l-6.5918,5.56641
+        l11.71887-0.48828h28.61328c2.44141,0,4.15027,1.75781,4.15027,4.19922s-1.66016,4.19922-4.15027,4.19922h-28.61328
+        l-11.7677-0.43945l6.64062,5.61523l6.88489,6.73828c0.7323,0.73242,1.26941,1.75781,1.26941,2.97852
+        c0,2.29492-1.80652,4.05273-4.10144,4.05273c-1.17188,0-2.14856-0.48828-2.88098-1.17188l-18.70117-18.65234
+        C-1363.27881-1067.80273-1363.76709-1068.7793-1363.76709-1070.04883z"/></g></svg>
+    {{/is}}
+
+    {{#is symbolName "badge-circle-fill"}}
+      <svg id="badge_circle_filled" data-name="badge_circle_filled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+        <path d="M29.929896,59.9213121 C46.2189361,59.9213121 59.8517361,46.2884801 59.8517361,29.99944 C59.8517361,13.67128 46.2189361,0.0776000001 29.890856,0.0776000001 C13.562696,0.0776000001 0.00800000001,13.67128 0.00800000001,29.99944 C0.00800000001,46.2884801 13.601736,59.9213121 29.929896,59.9213121 Z" transform="translate(2 2)"/>
+      </svg>
+    {{/is}}
+    {{#is symbolName "plus"}}
+      <svg id="plus" data-name="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+        <path d="M0.0955555557,29.9994075 C0.0955555557,31.7717038 1.57844445,33.2184445 3.3145926,33.2184445 L26.715926,33.2184445 L26.715926,56.6197734 C26.715926,58.3558816 28.1626667,59.8388149 29.934963,59.8388149 C31.7072593,59.8388149 33.1901482,58.3558816 33.1901482,56.6197734 L33.1901482,33.2184445 L56.5553334,33.2184445 C58.2914075,33.2184445 59.7743705,31.7717038 59.7743705,29.9994075 C59.7743705,28.2271112 58.2914075,26.7442223 56.5553334,26.7442223 L33.1901482,26.7442223 L33.1901482,3.37903704 C33.1901482,1.64288889 31.7072593,0.16 29.934963,0.16 C28.1626667,0.16 26.715926,1.64288889 26.715926,3.37903704 L26.715926,26.7442223 L3.3145926,26.7442223 C1.57844445,26.7442223 0.0955555557,28.2271112 0.0955555557,29.9994075 Z" transform="translate(2 2)"/>
+      </svg>
+    {{/is}}
+    {{#is symbolName "minus"}}
+      <svg id="minus" data-name="minus" xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 64 64">
+        <path d="M3.3145926,6.62392594 L56.5553334,6.62392594 C58.2914075,6.62392594 59.7743705,5.14096297 59.7743705,3.36866667 C59.7743705,1.59637037 58.2914075,0.14962963 56.5553334,0.14962963 L3.3145926,0.14962963 C1.57844445,0.14962963 0.0955555557,1.59637037 0.0955555557,3.36866667 C0.0955555557,5.14096297 1.57844445,6.62392594 3.3145926,6.62392594 Z" transform="translate(2 28.667)"/>
+      </svg>
+    {{/is}}
+    {{#is symbolName "help"}}
+      <svg id="help" data-name="help" xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 64 64">
+        <path d="M15.9854681,42.4905958 C18.1671702,42.4905958 19.1645107,40.9945533 19.1645107,38.9998724 L19.1645107,37.9401703 C19.2268085,33.826149 20.6916383,32.1120001 25.6783405,28.6836383 C31.0390852,25.0682554 34.4362341,20.8919362 34.4362341,14.8766809 C34.4362341,5.52663831 26.8315532,0.165957447 17.3567873,0.165957447 C10.3131064,0.165957447 4.14204256,3.50080852 1.49285107,9.51600002 C0.838340427,10.9808298 0.557872341,12.4145107 0.557872341,13.5988724 C0.557872341,15.375383 1.5863617,16.6220426 3.48753192,16.6220426 C5.07702129,16.6220426 6.13672341,15.6870639 6.60421278,14.1598724 C8.19376597,8.23812767 12.120766,5.99412767 17.138617,5.99412767 C23.2161703,5.99412767 27.9847022,9.42248938 27.9847022,14.8455319 C27.9847022,19.302383 25.2108511,21.795766 21.2214894,24.600766 C16.3282979,27.9979788 12.7441277,31.6445107 12.7441277,37.1298511 L12.7441277,39.093383 C12.7441277,41.0880639 13.8349787,42.4905958 15.9854681,42.4905958 Z M15.9854681,59.5388299 C18.4787873,59.5388299 20.4423192,57.5441746 20.4423192,55.1131533 C20.4423192,52.6509716 18.4787873,50.6874575 15.9854681,50.6874575 C13.5544468,50.6874575 11.559766,52.6509716 11.559766,55.1131533 C11.559766,57.5441746 13.5544468,59.5388299 15.9854681,59.5388299 Z" transform="translate(14.766 2)"/>
+      </svg>
+    {{/is}}
+    {{#is symbolName "lock-fill"}}
+      <svg id="lock_fill" data-name="lock_fill" class="icon" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <g transform="matrix(1 0 0 1 80.70993408203117 114.2724609375)">
+          <path d="M30.8971 11.3277L75.5987 11.3277C82.7683 11.3277 86.5689 7.44371 86.5689-0.285611L86.5689-33.8799C86.5689-41.568 82.7683-45.452 75.5987-45.452L30.8971-45.452C23.7381-45.452 19.9375-41.568 19.9375-33.8799L19.9375-0.285611C19.9375 7.44371 23.7381 11.3277 30.8971 11.3277ZM28.5164-41.7016L36.2358-41.7016L36.2358-58.1657C36.2358-70.506 44.1294-77.0264 53.2273-77.0264C62.3559-77.0264 70.3118-70.506 70.3118-58.1657L70.3118-41.7016L78.0311-41.7016L78.0311-57.1622C78.0311-75.51 66.0249-84.3623 53.2273-84.3623C40.4709-84.3623 28.5164-75.51 28.5164-57.1622Z" />
+        </g>
+      </svg>
+    {{/is}}
+</div>
+
+        
+  </script>
+  
+  <script type="text/stache" id="jstache_1381419984">
+    
+          
+          
+          
+          
+          
+          
+
+
+{{#if showSwpOption}}
+  {{#if swpOptionAsDefault}}
+    {{> swpContainerTemplateID}}
+ {{else}}
+    <div class="form-row swp-account-name">
+         <label class="sr-only form-cell form-label" for="account_name_text_field">{{locMessage 'web.default.signInLabel'}}</label>
+        <div class="form-cell">
+          <div class='swp-form-cell-wrapper'>
+               {{> swpContainerTemplateID}}
+          </div>
+        </div>
+      </div>
+ {{/if}}
+{{/if}}
+
+        
+  </script>
+  
+  <script type="text/stache" id="jstache_649468495">
+    
+          
+          
+          
+          
+          
+          
+<div style='{{#if swpOptionAsDefault}}{{#if useSasskit7}}height:114px;{{else}}height:90px;{{/if}}{{/if}}' class="{{#if errorMessage}}is-error{{/if}} fade-in fade-out"> 
+  <div class='swp-option' style=''>
+    <div style='position:relative;flex-grow: 1;'>
+      <div class="loading-wrapper" style="position: absolute;top: 50%;left: -20px;">
+        {{#if showSwpLoadingSpinner}}
+          <idms-spinner anchor-element=".spin-anchor" show="{showSwpLoadingSpinner}"></idms-spinner>
+          <div class="spin-anchor"></div>
+        {{/if}}
+      </div>
+      <button {{#if showSwpLoadingSpinner}} disabled {{/if}} id="continue-password" style="display:inline; width:100%;box-sizing: border-box;"  ($click)="usePassword()" class="{{#if useSasskit7}}button-secondary-alpha{{else}}button-secondary{{/if}} button-block tk-subbody button button-rounded-rectangle">
+        Continue with Password
+      </button>  
+    </div> 
+    <div style='text-align:center;flex-grow: 1;'> 
+      <button  {{#if showSwpLoadingSpinner}} disabled {{/if}} style="display: flex;align-items: center;column-gap: 5px;width: 100%;box-sizing: border-box;justify-content: center;" id="swp" ($click)="signInWithKey()" class="{{#if useSasskit7}}button-secondary-alpha{{else}}button-secondary{{/if}} button-block button-rounded-rectangle tk-subbody button">
+        <i aria-hidden="true" class="shared-icon no-flip iphone-icon"></i> Sign in with Passkey
+      </button> 
+      <div class="tk-caption" style='margin-top: 5px;'>
+     {{#switch osPlatform}}
+      {{#case "ios"}}
+        Requires iOS 17 or macOS Sonoma.
+      {{/case}}
+      {{#case "mac os"}}
+        {{#if isSafari }}
+          Requires macOS Sonoma or iOS 17.
+        {{else}}
+          Requires a device with iOS 17.
+        {{/if}}
+      {{/case}}
+      {{#default}}
+        Requires a device with iOS 17.
+      {{/default}}
+     {{/switch}}
+     </div>
+      
+      
+    </div>
+  </div>
+  
+    <div style="height:22px; text-align:center;position:relative;">
+    
+    {{#if errorMessage}}
+    <div style="position:absolute;top:3px;text-align: center;width: 100%;">
+      <idms-error
+        {error-message}="errorMessage"
+        error-type="standards"
+                    
+      ></idms-error>  
+      {{/if}}
+    </div>
+    <div>
+
+  
+</div>
+
+        
+  </script>
+  
+  
+  
+
+
+
+
+
+
+
+
+    
+    
+        <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsj/1913796087/boot/initBootData.js" ></script>
+
+    
+
+
+
+
+<script type="application/json" class="boot_args">
+    {"direct":{"destinationDomain":"https://itunesconnect.apple.com","urlContext":"/appleauth","enableAuthPopup":false},"additional":{"skVersion":"7"}}
+</script>
+
+
+
+    
+    
+        <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsj/1970480931/boot/initLocalizationStrings.js" ></script>
+
+    
+
+
+
+<script type="application/json" class="localization_strings">
+    [{"key":"signInFallbackError","value":"Check the account information you entered and try again.","shouldEscape":true},{"key":"fallback","value":"Failed to verify your identity. Try again.","shouldEscape":true},{"key":"exampleEmail","value":"name@example.com","shouldEscape":true},{"key":"appleId","value":"Email or Phone Number","shouldEscape":true},{"key":"account","value":"Account","shouldEscape":true},{"key":"password","value":"Password","shouldEscape":true},{"key":"rememberMe","value":"Remember me","shouldEscape":true},{"key":"keepMeSignedIn","value":"Keep me signed in","shouldEscape":true},{"key":"defaultSignInLabel","value":"Sign In to your Apple Account","shouldEscape":true},{"key":"cancelText","value":"Cancel","shouldEscape":true},{"key":"resetAccText","value":"Unlock Account","shouldEscape":true},{"key":"gotoAppleIdText","value":"Go to Apple Account","shouldEscape":true},{"key":"addTrustedDeviceText","value":"Add a Trusted Device","shouldEscape":true},{"key":"iframeTitle","value":"Sign In to your Apple Account","shouldEscape":true},{"key":"acccountLockedTitle","value":"This Apple Account has been locked for security reasons.","shouldEscape":true},{"key":"noDevicesNoRKDialogTitle","value":"Cannot Verify Identity","shouldEscape":true},{"key":"suppressIforgotTitle","value":"Need to reset your password?","shouldEscape":true},{"key":"resetCRTokenTitle","value":"This link is no longer valid.","shouldEscape":true},{"key":"logoAltText","value":"Application logo","shouldEscape":true},{"key":"saChallenge.button.resetSecurityQuestions.text","value":"Reset Security Questions","shouldEscape":true},{"key":"titleCouldNotGenerateResetQuestionURL","value":"Could Not Reset Security Questions","shouldEscape":true},{"key":"okText","value":"OK","shouldEscape":true},{"key":"accountUnlockButton","value":"Unlock Account","shouldEscape":true},{"key":"btnTextGoBack","value":"Go Back","shouldEscape":true},{"key":"btnTextContinue","value":"Continue","shouldEscape":true},{"key":"notNowTrustMyBrowser","value":"Not Now","shouldEscape":true},{"key":"intermediaryIntroPageTitle","value":"Apple Account for {0}","shouldEscape":true},{"key":"intermediaryIntroPageDefaultTitle","value":"Apple Account for your organization","shouldEscape":true},{"key":"profileIntroTitle2","value":"Get the right access","shouldEscape":true},{"key":"profileIntroDescription2","value":"Makes it easy for apps to provide access control, keeping your whole organization safer.","shouldEscape":true},{"key":"profilePrivacyText","value":"The information in this screen will be shared so that {0:appName} can identify who you are within your organization and assign you the correct level of access.","shouldEscape":true}]
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+        
+    
+
+
+
+        
+    
+    
+
+
+    <script type="application/json" id="app_config_sa_sk7">
+        {
+            "i18n": 
+        
+        
+        {"web.error.rk.rkLocked.body":"You have entered an incorrect Recovery Key too many times. Try again later.","web.error.tooManyCodesSentToDevice":"Too many verification codes have been sent. Enter the last code you received, use one of your devices, or try again later.","web.error.unknown.description":"Your request could not be completed because of an error. Please try again later.","web.error.securityCodeLocked":"You have entered an incorrect verification code too many times. Try again later.","web.error.fallback":"Failed to verify your identity. Try again.","error_21669":"Incorrect verification code.","web.error.unknown.title":"Unexpected error occurred.","web.challenge.canNotGenerateResetQuestionURL.title":"Could Not Reset Security Questions","web.challenge.canNotGenerateResetQuestionURL.text":"Your request could not be completed because of an error.","web.tryAgainLater.text":"Try again later.","web.text.ok":"OK","web.title.answerSecurityQuestion":"Answer your security questions to continue.","web.challenge.answer.placeholder.answer.label.with.number":"Answer {0:digit}","web.challenge.supportPin.button":"Get Support PIN","web.text.verifying":"Verifying…","web.button.text.goBack":"Go Back","web.button.text.continue":"Continue","web.challenge.reset.button":"Reset Security Questions","web.challenge.reset.text":"Forgot your answers?","web.challenge.too.many.verification.attempts.title":"Too many incorrect verification attempts","web.challenge.too.many.verification.attempts.resetQuestions.body":"You have made too many attempts to answer your security questions. You can try again later or reset your security questions.","web.text.cancel":"Cancel","web.text.sendingCode":"Sending code…","web.title.email.verifyCode":"Enter verification code","web.aria.digit":"Digit","web.verifyCode.first.digit.sr":"Enter verification code. On entering code in the input fields, the focus will automatically move on to the next input fields. After entering the verification code, the page gets updated automatically.","web.aria.description.security.code":"On entering verification code in the input fields, the focus will automatically move on to the next input fields","web.footer.restricted.verifyEmail.codeHasBeenSent":"An email with a verification code has been sent to \u003Cspan class=\"displayName\"\u003E{0}\u003C\/span\u003E. Enter the code to continue.","web.hsa2.verify.tryAgain.sms":"Resend Code","web.restricted.verifyEmail.tryAgain.subtext":"Check your junk mail folder or wait a few minutes, then request a new code.","web.restricted.verifyEmail.help.other":"More Information","web.restricted.verifyEmail.needHelp.subtext":"Can’t use this email address?","web.restricted.verifyEmail.more.help.other":"Can’t use \u003Cspan class=\"displayName\"\u003E“{0}”\u003C\/span\u003E?","web.restricted.verifyEmail.more.needHelp.subtext":"For your security, you must have access to this email address to sign in.","web.footer.verifyCode.link.didntReceiveCode":"Didn’t get a verification code?","web.footer.verifyCode.popover.label.sr.only":"Other options","web.challenge.canNotGeneratePin.title":"Your request could not be completed because of an error.","web.challenge.canNotGenerateSupportPIN.text":"Your request could not be completed because of an error.","web.challenge.generatePin.title":"Temporary Support PIN","web.challenge.generatePin.bodyText":"When you contact Apple Support on phone or online, we may ask you for a 4-digit PIN to verify your identity.","web.auth.signout.loading.text":"Loading…","web.challenge.generatePin.button":"Generate PIN","web.challenge.supportPinGenerated.text":"Your Temporary Support PIN is {0}.","web.challenge.supportPinValid.text":"This PIN is valid until {0}.","web.challenge.generateNewPin.button":"Generate New PIN","web.challenge.done.button":"Done","web.title.trustMyBrowser":"Trust this browser?","web.trustMyBrowser.2fa.info":"If you choose to trust this browser, you will not be asked for a verification code the next time you sign in.","web.trustMyBrowser.notNow":"Not Now","web.trustMyBrowser.dontTrust":"Don’t Trust","web.trustMyBrowser.trust":"Trust","web.hsa1.collectionDevice":"Collection Device","web.hsa1.fsa2key":"Security Key","web.hsa1.individualKey":"Individual Key","web.hsa1.fsa1key":"Security Key","web.hsa1.signInWithApprovedDevice":"Sign In with Approved Device","web.hsa1.pushNotification":"Push Notification","web.hsa1.sendCode.phoneNumberEndingIn":"Phone number ending in {0}","web.text.sms":"SMS","web.text.totp":"TOTP","web.aria.deviceInfo":"number ending with {0}","web.title.chooseDevice.sendVerificationCode":"Verify Your Identity","web.footer.chooseDevice.chooseTrustedDeviceForAccount":"Your account is configured for several multi-factor authentication options.","web.footer.chooseDevice.chooseTrustedDevice":"Your Apple Account is protected with two-step verification. Choose a trusted device to receive a verification code.","web.footer.chooseDevice.link.cantAccessTrustedDevices":"Can’t access your trusted devices?","web.error.account.locked.cantAccessDevices.text.open.newWindow":"If you cannot access your trusted devices, \u003Ca href=\"{0}\" class=\"{1} ax-outline\" id=\"{3}\" target=\"{4}\" tabindex=\"0\" aria-describedby=\"{3}\"\u003Evisit the Apple Account site \u003Cspan class=\"sr-only\"\u003E Opens in a new window.\u003C\/span\u003E\u003C\/a\u003E and use Recovery Key to add a trusted device.","web.error.account.locked.cantAccessDevices.text":"If you cannot access your trusted devices, \u003Ca href=\"{0}\" class=\"{1} ax-outline\" id=\"{3}\" target=\"{4}\" tabindex=\"0\" aria-describedby=\"{3}\"\u003Evisit the Apple Account site\u003C\/a\u003E and use Recovery Key to add a trusted device.","web.footer.verifyCode.button.link.sendNewCode":"Send a new code","web.footer.verifyCode.link.useDifferentDevice":"Use a different device","web.title.verifyCode.verifyYourIdentity":"Enter Verification Code","web.footer.verifyCode.hsa1.enterTheCode":"Enter the verification code sent to \u003Cspan class=\"displayName\"\u003E{0}\u003C\/span\u003E.","web.footer.verifyCode.hsa1.enterTheCodeSentToYourDevices":"Enter the verification code sent to your devices.","web.footer.rk.link.lostRK":"Lost your Recovery Key?","web.footer.rk.link.useTrustedDevice":"Use trusted device","web.title.rk.enterRK":"Enter Recovery Key","web.footer.rk.enterRK":"Enter the Recovery Key provided when you enabled two-step verification.","web.info.rk.lostRK":"Your Recovery Key is a 14-character code that you received when you set up two-step verification. If you lost your Recovery Key, read \u003Ca href=\"{0}\" target=\"_blank\" class=\"ax-outline\"\u003Ethis article\u003C\/a\u003E for instructions.","web.input.rk.label":"Recovery Key","web.title.verifyCode.2fa":"Two-Factor Authentication","web.footer.verifyCode.hsa2.codeGenerated":"A message with a verification code has been sent to your devices. Enter the code to continue.","widget.v2.hsa2.verify.device.resend.code.link.fallback.text":"Resend code","widget.v2.hsa2.verify.device.cannot.get.code.link.fallback.text":"Can’t get to your devices?","widget.v2.hsa2.verify.device.popup.caption.message.rates.may.apply":"Messaging or data rates may apply.","web.hsa2.verify.tryAgain.sms.subtext":"Get a new verification code.","widget.v2.hsa2.verify.tryAgain.sms":"Text code again","web.hsa2.verify.tryAgain.calling":"Calling…","web.hsa2.verify.tryAgain.call.subtext":"Get a phone call with a new code.","widget.v2.hsa2.verify.tryAgain.call":"Call Again","widget.v2.hsa2.verify.callMe":"Get a phone call","widget.v2.hsa2.verify.device.help.popup.get.a.call.text":"Get a call at \u003Cspan class=\"phone-number force-ltr\"\u003E{0:phonenumber}\u003C\/span\u003E","widget.v2.hsa2.verify.sendText":"Text the Code","widget.v2.hsa2.verify.device.help.popup.text.code.to.phone.text":"Text code to \u003Cspan class=\"phone-number force-ltr\"\u003E{0:phonenumber}\u003C\/span\u003E","web.hsa2.verify.usePhone":"Use Phone Number","web.hsa2.verify.usePhone.subtext":"Get a text or phone call with a code.","web.hsa2.verify.device.help.deviceNoAccess.other":"More Options...","web.auth.oauth2.open.in.new.window.sr.only":"Opens in a new window.","web.hsa2.verify.needHelp.subtext":"Confirm your phone number to get support.","web.restricted.verifyPhone.more.help.other":"Can’t use \u003Cspan class=\"displayName\"\u003E{0}\u003C\/span\u003E?","web.restricted.verifyPhone.more.needHelp.subtext":"For your security, you must have access to this phone number to sign in.","widget.v2.hsa2.verify.device.help.popup.cannot.use.phone.text":"Can’t use \u003Cspan class=\"phone-number force-ltr\"\u003E{0:phonenumber}\u003C\/span\u003E","widget.v2.title.chooseDevice.sendVerificationCode":"Choose a phone number to receive a verification code.","widget.v2.hsa2.choose.phone.caption.message.rates.may.apply":"Messaging or data rates may apply.","web.hsa2.verify.cantAccessPhoneNumbers":"Don’t have access to these phone numbers?","web.hsa2.verify.voiceCall":"Phone call","web.hsa2.verify.textMsg":"Text message","web.suppressIforgot.noDevicesHelpDialog.text":"Contact your organization’s Administrator or Manager and ask them to reset the phone numbers for your Managed Apple Account.","web.hsa2.verify.device.help.deviceOffline.question":"Devices offline or not receiving verification code?","web.hsa2.verify.device.help.deviceOffline.answer":"Use the code generator on your trusted device. \u003Ca href=\"{0}\" class=\"click-handle ax-outline\" target=\"_blank\"\u003ELearn how\u003Ci class=\"icon icon_right_chevron\"\u003E\u003C\/i\u003E\u003C\/a\u003E","web.hsa2.verify.device.help.deviceNoAccess.question":"Don’t have access to your trusted devices or phone number?","web.hsa2.use.recovery.key.description":"If you have a recovery key, you can use it to sign in to your account \u003Ca href=\"{0}\" class=\"{1}\" target=\"_blank\"\u003ELearn how\u003Ci class=\"icon icon_right_chevron\"\u003E\u003C\/i\u003E\u003C\/a\u003E","web.hsa2.verify.device.help.disclaimer":"Account recovery may take a few days or longer, depending on the information you can provide to verify your identity. \u003Ca href=\"{0}\" class=\"click-handle ax-outline\" target=\"_blank\"\u003ELearn More\u003Ci class=\"icon icon_right_chevron\"\u003E\u003C\/i\u003E\u003C\/a\u003E","web.suppressIforgot.noDevicesHelpDialog.title":"Don’t have access to your phone?","web.hsa2.verify.device.help.title":"More Verification Options","widget.v2.footer.smsConsent.hsa2.codeWillBeSent":"Sign in to your account with a verification code sent to your trusted phone number. Messaging or data rates may apply.","widget.v2.verifyPhone.footer.link.can.not.use.this.number":"Can’t use this number?","web.button.text.cancel":"Cancel","widget.v2.footer.smsConsent.hsa2.send.code.button":"Send code","webAuthn.authentication.notSupported.update.browser.title":"Update your web browser","webAuthn.authentication.notSupported.use.different.browser.title":"This browser doesn’t support security keys","webAuthn.authentication.notSupported.signin.error":"To sign in with your security key, update this browser to the latest version.","webAuthn.authentication.notSupported.use.different.browser":"Try another browser to sign in with your security key.","web.hsa2.verify.key":"Use a security key to sign to your Apple Account: \u003Cb\u003E{0}\u003C\/b\u003E","widget.v2.verifyPhone.footer.link.resend.code":"Resend code","widget.v2.footer.verifyCode.hsa2.codeHasBeenSent":"Enter the verification code sent as a message to \u003Cspan class=\"displayName force-ltr\"\u003E{0:phonenumber}\u003C\/span\u003E.","widget.v2.footer.verifyCode.hsa2.codeHasBeenSentOnVoice":"Enter the verification code from the phone call to \u003Cspan class=\"displayName force-ltr\"\u003E{0:phonenumber}\u003C\/span\u003E.","web.managedAppleID.verifyCode.link.didntReceiveCode":"Don’t have a verification code?","web.managedAppleID.verifyCode.enterCode":"Enter verification code provided by your organization.","web.managedAppleID.verifyCode.getCodeFromAdmin":"If you don’t have a verification code, talk to your instructor or administrator to get one."}
+      
+        }
+    </script>
+
+
+    
+    
+        
+    
+
+
+<script type="application/json" class="boot_args">
+    {"direct":{"isPasswordSecondStep":true,"scriptSk7Url":"https://appleid.cdn-apple.com/appleauth/static/module-assets/home-efcb5792aa819f9ffd5e.js","isFederatedAuthEnabled":true,"accountNameAutoComplete":"username webauthn","urlBag":{"passwordReset":"https://iforgot.apple.com/password/verify/appleid","createAppleID":"https://account.apple.com/account","appleId":"https://account.apple.com","verificationCodeHelp":"https://support.apple.com/kb/HT204974","accountRecoveryHelp":"https://support.apple.com/kb/HT204921","crResetUrl":"https://iforgot.apple.com/request/questions/reset"},"authAttributes":"3vvCrcLPJTpocNpR89oAIiTha+euoA==","isRaFF":true,"forgotPassword":true,"swpAuth":true,"twoFactorAuthEnv":1,"countryCode":"US","isInterstitialFedAuthPageEnabled":true,"twoFactorAuthAppKey":"SRHyr6vucF9FNfGnoXtD6psCTodEz0D1j3edwS3TysI=","isRtl":"false","hashcash":{"hashcashGenerationTimeout":10,"hcChallenge":"9e9622ae8a1f371347207f3ef1bb3329","hcBits":"10","isHCstrictTimeout":true},"webSRPClientWorkerScriptTag":"\u003Cscript type=\"text/javascript\" src=\"https://appleid.cdn-apple.com/appleauth/static/jsj/N686246986/webSRPClientWorker.js\" \u003E\u003C/script\u003E","isRaIdp":true,"acUrl":"https://idmsa.apple.com/IDMSWebAuth/acsignin","enableSRPAuth":true,"shouldSuppressIForgotLink":false,"disableChromeAutoComplete":true,"generateHashcashScriptTag":"\u003Cscript type=\"text/javascript\" src=\"https://appleid.cdn-apple.com/appleauth/static/jsj/793768123/generateHashcash.js\" \u003E\u003C/script\u003E","meta":{"futureReservedAuthUIModes":["popped-window","dialog","tabbed"],"supportedAuthUIModes":["window","embed","inline"],"FEConfiguration":{"pmrpcTimeout":"1000","enableAllowAttribute":true,"enableSwpAuth":true,"isEyebrowTextboxEnabled":false,"skVersion":"7","pmrpcRetryCount":"5","jsLogLevel":"ERROR","appLoadDelay":"0","enablePerformanceLog":false}},"enableFpn":true,"enableSecurityKeyIndividual":false,"showSwpAuth":true},"additional":{}}
+</script>
+
+    
+    
+        <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsj/N1569178276/init-app.js" ></script>
+
+    
+
+
+
+
+
+
+    
+
+    
+<script src="https://appleid.cdn-apple.com/appleauth/static/module-assets/home-efcb5792aa819f9ffd5e.js"></script>
+
+    
+        
+            
+            <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsj/N1657115263/widget/auth/app.js" ></script>
+
+        
+    
+    
+        
+    
+    
+        
+            
+            
+                
+                    
+                        <script type="text/javascript"
+                            src="https://appleid.cdn-apple.com/appleauth/static/jsapi/format-phonenumber/format-phonenumber.js?v=2"></script>
+                    
+                    
+                
+            
+        
+    
+</body>
+</html>
+
+
+//---------------------------------------------
+POST /appleauth/auth/signin/complete?isRememberMeEnabled=false HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+X-Apple-Widget-Key: e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42
+Accept: application/json, text/javascript
+X-Apple-Hc: 1:10:20250529210654:9e9622ae8a1f371347207f3ef1bb3329::1863
+Cookie: aasp=F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A; dslang=US-EN; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Host: idmsa.apple.com
+Content-Length: 212
+
+{"accountName":"yanwen1688@gmail.com","c":"d-d8-c925faea-3c8d-11f0-999c-1993c626367f:NC","m1":"3+AcAgrZgvJ/jzYxpqNM4Rk0PLLXXPhtbqi/g+JyTbE=","m2":"k23VIsAgLAj8g9TnCUK8RWbQ+XVyUCZEG3adnh2Dxpg=","rememberMe":false}
+
+HTTP/1.1 409 
+Server: Apple
+Date: Thu, 29 May 2025 13:06:55 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+X-Apple-I-Request-ID: cb5e5e6f-3c8d-11f0-90d3-27fc178992c7
+X-FRAME-OPTIONS: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXwxAAABlxw02K2OY8jvaOyHBWDa8Jx4448HF6Fv4xOU4gM8uJSkjcFQ9CdWq3L_R5asACU7ZuHDFITp5Bw18wvJplhvsbGpFV3gijboytxAYzVNW2cUj82wXQ
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Cache-Control: no-store
+X-Apple-TwoSV-Trust-Eligible: true
+Location: /auth
+X-Apple-ID-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Auth-Attributes: cBgpEKqII/u6Xl6RiCQAJTtm9AfiOw==
+X-Apple-ID-Account-Country: CHN
+Cache-Control: no-store
+vary: accept-encoding
+Content-Encoding: gzip
+Content-Language: en-US-x-lvariant-USA
+Connection: keep-alive
+
+{
+  "authType" : "hsa2"
+}
+
+//--------------------------------------------------------
+
+GET /appleauth/auth HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+X-Apple-Id-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Widget-Key: e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42
+Accept: application/json
+Scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXwxAAABlxw02K2OY8jvaOyHBWDa8Jx4448HF6Fv4xOU4gM8uJSkjcFQ9CdWq3L_R5asACU7ZuHDFITp5Bw18wvJplhvsbGpFV3gijboytxAYzVNW2cUj82wXQ
+Cookie: aasp=F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A; dslang=US-EN; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Host: idmsa.apple.com
+
+
+HTTP/1.1 201 
+Server: Apple
+Date: Thu, 29 May 2025 13:06:58 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+X-Apple-I-Request-ID: cccbf856-3c8d-11f0-b7bc-41c778d52c8e
+X-FRAME-OPTIONS: ALLOW-FROM https://itunesconnect.apple.com
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;  frame-ancestors 'self' https://itunesconnect.apple.com;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXwyAAABlxw04gpWhAZDHmWAmGiNFUmD7zvDWj7CRyy5JDIo3h9I8hPWPtmw0YhK1REsACJNESh_wPbKa_YsGMmffw-ZkdfU2SAAk8e-q_eg7-NEs8nO7kilGQ
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+X-Apple-AK-Auth-Type: hsa2
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Cache-Control: no-store
+Set-Cookie: crsc=+M6J7TaXT9zOKQBsGCc8Oqn/amHjj0qFOcXm4qPWnvvlCLrx6fXmLVfXYf/H4DHJ1Ez2b6Lb3151OqNcZk4AIk0RWLnBzw==; Max-Age=900000; Expires=Sun, 08 Jun 2025 23:06:58 GMT; Domain=idmsa.apple.com; Path=/; Secure; HttpOnly
+X-Apple-ID-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Auth-Attributes: n3qzQzKzd5XdQTF1SgYAIk0RWMee9A==
+X-Apple-ID-Account-Country: CHN
+Cache-Control: no-store
+vary: accept-encoding
+Content-Encoding: gzip
+Content-Language: en-US-x-lvariant-USA
+Connection: keep-alive
+
+{
+  "trustedPhoneNumbers" : [ {
+    "numberWithDialCode" : "+86 ••• •••• ••53",
+    "nonFTEU" : true,
+    "pushMode" : "sms",
+    "obfuscatedNumber" : "••• •••• ••53",
+    "lastTwoDigits" : "53",
+    "id" : 3
+  } ],
+  "phoneNumber" : {
+    "numberWithDialCode" : "••• ••• •••• ••53",
+    "nonFTEU" : true,
+    "pushMode" : "sms",
+    "obfuscatedNumber" : "••• •••• ••53",
+    "lastTwoDigits" : "53",
+    "id" : 3
+  },
+  "securityCode" : {
+    "length" : 6,
+    "tooManyCodesSent" : false,
+    "tooManyCodesValidated" : false,
+    "securityCodeLocked" : false,
+    "securityCodeCooldown" : false
+  },
+  "mode" : "sms",
+  "type" : "verification",
+  "authenticationType" : "hsa2",
+  "recoveryUrl" : "https://iforgot.apple.com/phone/add?prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "cantUsePhoneNumberUrl" : "https://iforgot.apple.com/iforgot/phone/add?context=cantuse&prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "recoveryWebUrl" : "https://iforgot.apple.com/password/verify/appleid?prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "repairPhoneNumberUrl" : "https://gsa.apple.com/appleid/account/manage/repair/verify/phone",
+  "repairPhoneNumberWebUrl" : "https://appleid.apple.com/widget/account/repair?#!repair",
+  "noTrustedDevices" : true,
+  "aboutTwoFactorAuthenticationUrl" : "https://support.apple.com/kb/HT204921",
+  "autoVerified" : false,
+  "showAutoVerificationUI" : false,
+  "supportsCustodianRecovery" : false,
+  "hideSendSMSCodeOption" : false,
+  "supervisedChangePasswordFlow" : false,
+  "enableNonFTEU" : true,
+  "supportsRecovery" : true,
+  "trustedPhoneNumber" : {
+    "numberWithDialCode" : "+86 ••• •••• ••53",
+    "nonFTEU" : true,
+    "pushMode" : "sms",
+    "obfuscatedNumber" : "••• •••• ••53",
+    "lastTwoDigits" : "53",
+    "id" : 3
+  },
+  "hsa2Account" : true,
+  "restrictedAccount" : false,
+  "managedAccount" : false
+}
+
+//---------------------------------------------------
+POST /appleauth/auth/verify/phone/securitycode HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+Content-Type: application/json
+X-Apple-Id-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Widget-Key: e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42
+Accept: application/json
+Scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXwxAAABlxw02K2OY8jvaOyHBWDa8Jx4448HF6Fv4xOU4gM8uJSkjcFQ9CdWq3L_R5asACU7ZuHDFITp5Bw18wvJplhvsbGpFV3gijboytxAYzVNW2cUj82wXQ
+Cookie: aasp=F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A; crsc=+M6J7TaXT9zOKQBsGCc8Oqn/amHjj0qFOcXm4qPWnvvlCLrx6fXmLVfXYf/H4DHJ1Ez2b6Lb3151OqNcZk4AIk0RWLnBzw==; dslang=US-EN; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Host: idmsa.apple.com
+Content-Length: 70
+
+{"securityCode":{"code":"547964"},"phoneNumber":{"id":3},"mode":"sms"}
+
+HTTP/1.1 200 
+Server: Apple
+Date: Thu, 29 May 2025 13:07:25 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+X-Apple-I-Request-ID: dd11024c-3c8d-11f0-a450-399b6503bdd8
+X-FRAME-OPTIONS: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXw0AAABlxw1TKigBrG8Gt26uwIhX1ttjdazqHBwXqRWZXyREVOiCofUz58VOi9CvEbvACIk6JahRoYtL3SM5XOqKThT_bDBpvUrrhWb1wiqkQBNltNJCIQpkA
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Cache-Control: no-store
+Set-Cookie: crsc=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:10 GMT; Domain=idmsa.apple.com; Path=/; Secure; HttpOnly
+X-Apple-ID-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Auth-Attributes: XbYGs/17W/A/6gGKDxkAIiTozn2O/w==
+Set-Cookie: myacinfo=DAWTKNV323952cf8084a204fb20ab2508441a07d02d30e48cecdc9895488734ca3e918b2eaec3e918e11e19e3b7f4d1007fc092c99fee21121d3bba08af99f7bddb94b3eebc18fa011c291ff4e5858eda5f05e8c88d9ee92e8a88442271c1c1a8107b795ee68a70e6ad2ed93f0edf1e6ccf666b9bad924b3b789be9ac5153b5560de7af76f71f851ef00106c2b22eeb506b3d164b18d692867d1386ad2929687f400b4550ec8a1f26f8ce830838a6ebbded81b5108f25749fe483a1a0b67e85f8b219c7a32b9e43e511d70dfcd72b84a8383c5379c53cdf79201d21221de2e2e0f439f8aaa8699ef1b1581a4ba740a137e978c150ac562fb437e515e778e22742e510724919767a0352d9b62ded2d28218ee844c175fb95abda25ba1060dbda2d4d5028c9edf510bb3e912a9c61757d06d51998db840dcfcbc3606a197124529650b9eaf5df21f57d8c3e8f247e4a50ef5aa39860e5aabb6242805c063a2219e4baee876e51dbc069c04ca67ff83dc18180fca691535c510f85106d695f2a7399403c58e4d385df709605d4bb2771fa095234f4316582079888397e270fd33db539ea80bd28c74a7e66add6cb93e441bb5e9744053fe8dfeadcd61d6083d23d9fc9155d268c6aae83a686008d6cf4f806989ab32e165281bd6a50d2d6a16b3bce7b7c354bc57f49bc055099c3dfa3becb714c0e85a6eb48cfb49ad93db491cce0ac67e35713b69d625782e9663712cc7d72ee7b31c826ef763d332fc264e31eb3aca16f41c4ffb2dd4622430c831fdd69e70437d570343d53502a4547b5d6540a271aabbe4f17384dce5df7de62ab4f3b5d4a8be7e8fb76ce6f9657af365e669346f3ae1b25b779cb3751ee4319145aa4bcfa8b151f13172b6689aa9062c0af7567fb2d76344873508e208f817967ba5a5d8496bf156bc572b4106779f2fbc984c8ec877eab45f0fa95bab225c6831b654f351aa94670f1c54bafaef397ea959aefb46c6553c585a47V3; Domain=apple.com; Path=/; Secure; HttpOnly
+X-Apple-ID-Account-Country: CHN
+Cache-Control: no-store
+vary: accept-encoding
+Content-Encoding: gzip
+Content-Language: en-US-x-lvariant-USA
+Connection: keep-alive
+
+{
+  "trustedPhoneNumbers" : [ {
+    "numberWithDialCode" : "+86 ••• •••• ••53",
+    "nonFTEU" : true,
+    "obfuscatedNumber" : "••• •••• ••53",
+    "lastTwoDigits" : "53",
+    "pushMode" : "sms",
+    "id" : 3
+  } ],
+  "phoneNumber" : {
+    "numberWithDialCode" : "+86 158 9966 4453",
+    "nonFTEU" : true,
+    "obfuscatedNumber" : "•••••••••53",
+    "lastTwoDigits" : "53",
+    "pushMode" : "sms",
+    "id" : 3
+  },
+  "securityCode" : {
+    "code" : "547964",
+    "tooManyCodesSent" : false,
+    "tooManyCodesValidated" : false,
+    "securityCodeLocked" : false,
+    "securityCodeCooldown" : false,
+    "valid" : true
+  },
+  "mode" : "sms",
+  "type" : "verification",
+  "authenticationType" : "hsa2",
+  "recoveryUrl" : "https://iforgot.apple.com/phone/add?prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "cantUsePhoneNumberUrl" : "https://iforgot.apple.com/iforgot/phone/add?context=cantuse&prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "recoveryWebUrl" : "https://iforgot.apple.com/password/verify/appleid?prs_account_nm=yanwen1688%40gmail.com&autoSubmitAccount=true&appId=142",
+  "repairPhoneNumberUrl" : "https://gsa.apple.com/appleid/account/manage/repair/verify/phone",
+  "repairPhoneNumberWebUrl" : "https://appleid.apple.com/widget/account/repair?#!repair",
+  "aboutTwoFactorAuthenticationUrl" : "https://support.apple.com/kb/HT204921",
+  "autoVerified" : false,
+  "showAutoVerificationUI" : false,
+  "supportsCustodianRecovery" : false,
+  "hideSendSMSCodeOption" : false,
+  "supervisedChangePasswordFlow" : false,
+  "enableNonFTEU" : true,
+  "supportsRecovery" : true,
+  "trustedPhoneNumber" : {
+    "numberWithDialCode" : "+86 ••• •••• ••53",
+    "nonFTEU" : true,
+    "obfuscatedNumber" : "••• •••• ••53",
+    "lastTwoDigits" : "53",
+    "pushMode" : "sms",
+    "id" : 3
+  },
+  "hsa2Account" : true,
+  "restrictedAccount" : false,
+  "managedAccount" : false
+}
+
+//---------------------------------------
+GET /appleauth/auth/2sv/trust HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+X-Apple-Id-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Widget-Key: e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42
+Accept: application/json
+Scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXwxAAABlxw02K2OY8jvaOyHBWDa8Jx4448HF6Fv4xOU4gM8uJSkjcFQ9CdWq3L_R5asACU7ZuHDFITp5Bw18wvJplhvsbGpFV3gijboytxAYzVNW2cUj82wXQ
+Cookie: aasp=F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A; dslang=US-EN; myacinfo=DAWTKNV323952cf8084a204fb20ab2508441a07d02d30e48cecdc9895488734ca3e918b2eaec3e918e11e19e3b7f4d1007fc092c99fee21121d3bba08af99f7bddb94b3eebc18fa011c291ff4e5858eda5f05e8c88d9ee92e8a88442271c1c1a8107b795ee68a70e6ad2ed93f0edf1e6ccf666b9bad924b3b789be9ac5153b5560de7af76f71f851ef00106c2b22eeb506b3d164b18d692867d1386ad2929687f400b4550ec8a1f26f8ce830838a6ebbded81b5108f25749fe483a1a0b67e85f8b219c7a32b9e43e511d70dfcd72b84a8383c5379c53cdf79201d21221de2e2e0f439f8aaa8699ef1b1581a4ba740a137e978c150ac562fb437e515e778e22742e510724919767a0352d9b62ded2d28218ee844c175fb95abda25ba1060dbda2d4d5028c9edf510bb3e912a9c61757d06d51998db840dcfcbc3606a197124529650b9eaf5df21f57d8c3e8f247e4a50ef5aa39860e5aabb6242805c063a2219e4baee876e51dbc069c04ca67ff83dc18180fca691535c510f85106d695f2a7399403c58e4d385df709605d4bb2771fa095234f4316582079888397e270fd33db539ea80bd28c74a7e66add6cb93e441bb5e9744053fe8dfeadcd61d6083d23d9fc9155d268c6aae83a686008d6cf4f806989ab32e165281bd6a50d2d6a16b3bce7b7c354bc57f49bc055099c3dfa3becb714c0e85a6eb48cfb49ad93db491cce0ac67e35713b69d625782e9663712cc7d72ee7b31c826ef763d332fc264e31eb3aca16f41c4ffb2dd4622430c831fdd69e70437d570343d53502a4547b5d6540a271aabbe4f17384dce5df7de62ab4f3b5d4a8be7e8fb76ce6f9657af365e669346f3ae1b25b779cb3751ee4319145aa4bcfa8b151f13172b6689aa9062c0af7567fb2d76344873508e208f817967ba5a5d8496bf156bc572b4106779f2fbc984c8ec877eab45f0fa95bab225c6831b654f351aa94670f1c54bafaef397ea959aefb46c6553c585a47V3; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Host: idmsa.apple.com
+
+
+HTTP/1.1 204 
+Server: Apple
+Date: Thu, 29 May 2025 13:07:27 GMT
+X-Apple-I-Request-ID: deba93b1-3c8d-11f0-b709-91d4b66da8f4
+X-FRAME-OPTIONS: ALLOW-FROM https://itunesconnect.apple.com
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self' ; child-src blob: ; connect-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://webcourier.sandbox.push.apple.com https://xp-qa.apple.com wss://websocket.push.apple.com ; font-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; frame-src 'self' https://appleid.apple.com https://gsa.apple.com https://account.apple.com ; img-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://*.mzstatic.com data: https://*.apple.com ; media-src data: ; object-src 'none' ; script-src 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ; style-src 'unsafe-inline' 'self' https://www.apple.com https://appleid.cdn-apple.com https://idmsa.apple.com https://gsa.apple.com https://idmsa.apple.com.cn https://signin.apple.com ;  frame-ancestors 'self' https://itunesconnect.apple.com;
+Referrer-Policy: origin
+X-BuildVersion: R10
+scnt: AAAA-kY0MjNCOEMyNjJFQzI1Njc5NDU4RDBBMjgxOUQ0NDk0QjdFMzQyRkY5QjVFQzg1MjEzRjk0NUI0MTgyQjNDRkYyNzUzOUQ2NzlBM0FCMTdDQTU2RjU4NEQwNTNEMzc3ODgyMTRGNTM3RjgyRUFGMTYzMzcxOEQ0REQxNTg1NzA3MEU2NkMxQjI4QkYzNTg3MjU4RUYwQ0QzOTc0OTA0NTI0NTlDRUY1OEFFRjNCMzNBQzlCRjg1RTlBMzk3QzY3QzhFOEREMzE1MUJDODY2QTY0NkFGNDg4NEM4NjkxMjE5RUVFNDMzOTBFMzQxMkQ3QXw1AAABlxw1V4_saYDb1z-nP7ZiFxhZjeCRk9xDk0WTOCbIPiOFp9nBPlirkjvQz5BvACIk6TxwGM_86bFRo6Xbw5DYDLtLPMzOADhtSkgj3ES5NbKDpOXlUQ
+Set-Cookie: dslang=US-EN; Domain=apple.com; Path=/; Secure; HttpOnly
+Set-Cookie: site=USA; Domain=apple.com; Path=/; Secure; HttpOnly
+Pragma: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Cache-Control: no-store
+Set-Cookie: DES51bb80309ec4ef995fb177b70bcc5d2b8=HSARMTKNSRVXWFlacDn4LrJOcyRJdT8SupiRcn7in42q/bN5VrfdsTt6kX+hBnSSaBpjBChj1pVt85fpKOt4nqOgG1dm7KesqPMIwnFA2jmBwr/qqZn+3oJ6Hu6HdFEm0XxdUPdy/+AjPYSVWO2xnxVHv88fcdllNK4FjZBrbusXuCdBDouIK7EsuFheE9AZSRVX; Max-Age=2592000; Expires=Sat, 28 Jun 2025 13:07:27 GMT; Domain=idmsa.apple.com; Path=/; Secure; HttpOnly
+X-Apple-ID-Session-Id: F423B8C262EC25679458D0A2819D4494B7E342FF9B5EC85213F945B4182B3CFF27539D679A3AB17CA56F584D053D37788214F537F82EAF1633718D4DD15857070E66C1B28BF3587258EF0CD397490452459CEF58AEF3B33AC9BF85E9A397C67C8E8DD3151BC866A646AF4884C8691219EEE43390E3412D7A
+X-Apple-Auth-Attributes: udDEUzG9S6dp1UH1qGwAIiTpRU7RNQ==
+Set-Cookie: myacinfo=DAWTKNV323952cf8084a204fb20ab2508441a07d02d30ce70b14aab165c4f1c669481c3dc2f677d9d6305f112749c8b37c6ef8e4a952dd6021d56249bf5a550f4e9f5f86643845fdbaccb4bd71b24aa2ffc35e9a78fa9e125371faa090b7785ef06a31de55a7412070c0d346146da7ff44da693d02df5c81423d7ab735226de0e8e2d1c8284bb48e9663297595502beb2fcfd786c17d75c17c6253a7f09a1831d0b99ef01e68bbff1f18bf0e63d1bd66bcb170d741bed3e54576cf46a85b5e5d99e5cd89b6ab11509256220572fd588b5f74142636fc9c7d1b0c24bc95b77683e5a819cc6a068141c58c2447142b7525ca7f40cd079e1f4e5de4db75292dbb09b79e060ca1f300df4e7557516dc774685d22a599fa5206671f7b5bd1f7e0142d0185d4efbdf7dc5784b2dd05bc140a984ad78f9470f260d833d6df18206b7cda51430c075ed46ca31dfd9af770d3f5b818974072fba83a32cab9e733efa4b45d1b02c335c1234ad6902aab287b978b61cba86452df7e772752b2b9a49d555f80f99b9731e2e2d64a9040e543ef9c51d2c911b89055a05ac0de99388aca2b34da257617e3a3609cd48db5a024f7803faed6645c7c49ae001c9d0832ed0347fe7aa2c69f7cfe33250fb3c1e1ae905324dc2b46015e4c0c47db0f4e55efe771ad9f94098bad7d4b560cd66a1600522e2107c7a58fab7d362d12f905b6f54ea2dc735a63d11129b27364ea471b0802e3565630b3760d26b158f98e6a516a3e3544fc0bc098736bbddf7c3366380b19903ba25787aae25e3a26dd6598d7d974812e9f6e08ec7965ff33c1d855ff81bd009029d7b1440a213cff45176120a0d0cf2d70f17174eb288b5d8db85b9bf74dd11db42035a9f5b328e184cfce9e03bdaa72cda50d3c15b2cae5b66e4f0d2a739ff18fef79e4cf3686014c6c12c3429602d3688a9cc1eb17cf3c7cfedbc0dcaa56033af10042a869fb5b70d6d80108332f4c91f0dc240a4580585a47V3; Domain=apple.com; Path=/; Secure; HttpOnly
+X-Apple-ID-Account-Country: CHN
+Connection: keep-alive
+
+
+//--------------------------------------------------
+
+GET /olympus/v1/session HTTP/1.1
+User-Agent: Spaceship 2.227.2
+X-Csrf-Itc: itc
+Cookie: dslang=US-EN; myacinfo=DAWTKNV323952cf8084a204fb20ab2508441a07d02d30ce70b14aab165c4f1c669481c3dc2f677d9d6305f112749c8b37c6ef8e4a952dd6021d56249bf5a550f4e9f5f86643845fdbaccb4bd71b24aa2ffc35e9a78fa9e125371faa090b7785ef06a31de55a7412070c0d346146da7ff44da693d02df5c81423d7ab735226de0e8e2d1c8284bb48e9663297595502beb2fcfd786c17d75c17c6253a7f09a1831d0b99ef01e68bbff1f18bf0e63d1bd66bcb170d741bed3e54576cf46a85b5e5d99e5cd89b6ab11509256220572fd588b5f74142636fc9c7d1b0c24bc95b77683e5a819cc6a068141c58c2447142b7525ca7f40cd079e1f4e5de4db75292dbb09b79e060ca1f300df4e7557516dc774685d22a599fa5206671f7b5bd1f7e0142d0185d4efbdf7dc5784b2dd05bc140a984ad78f9470f260d833d6df18206b7cda51430c075ed46ca31dfd9af770d3f5b818974072fba83a32cab9e733efa4b45d1b02c335c1234ad6902aab287b978b61cba86452df7e772752b2b9a49d555f80f99b9731e2e2d64a9040e543ef9c51d2c911b89055a05ac0de99388aca2b34da257617e3a3609cd48db5a024f7803faed6645c7c49ae001c9d0832ed0347fe7aa2c69f7cfe33250fb3c1e1ae905324dc2b46015e4c0c47db0f4e55efe771ad9f94098bad7d4b560cd66a1600522e2107c7a58fab7d362d12f905b6f54ea2dc735a63d11129b27364ea471b0802e3565630b3760d26b158f98e6a516a3e3544fc0bc098736bbddf7c3366380b19903ba25787aae25e3a26dd6598d7d974812e9f6e08ec7965ff33c1d855ff81bd009029d7b1440a213cff45176120a0d0cf2d70f17174eb288b5d8db85b9bf74dd11db42035a9f5b328e184cfce9e03bdaa72cda50d3c15b2cae5b66e4f0d2a739ff18fef79e4cf3686014c6c12c3429602d3688a9cc1eb17cf3c7cfedbc0dcaa56033af10042a869fb5b70d6d80108332f4c91f0dc240a4580585a47V3; site=USA
+Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+Accept: */*
+Host: appstoreconnect.apple.com
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 495
+Server: nginx
+Set-Cookie: dqsid=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NDg1MjQwNDgsImp0aSI6IjkxVkluUklnTWlNb0hpc1NUOVgzaHcifQ.kesOpaQqRj_wXDh4K33Pr--zyVDXIDmZxbZipkZSOn8; Max-Age=1800; Expires=Thu, 29 May 2025 13:37:38 GMT; Path=/; Secure; HTTPOnly
+Set-Cookie: itcdq=0;Version=1;Comment=;Domain=.apple.com;Path=/;Secure
+Date: Thu, 29 May 2025 13:07:38 GMT
+Expires: Thu, 29 May 2025 13:07:38 GMT
+Cache-Control: private, no-transform, max-age=0
+Accept-Ranges: bytes
+x-apple-jingle-correlation-key: 4MG6GUB25OG76N5JEGXBHUTY2Q
+x-apple-request-uuid: e30de350-3aeb-8dff-37a9-21ae13d278d4
+b3: e30de3503aeb8dff37a921ae13d278d4-4b0c5607c1717238
+x-b3-traceid: e30de3503aeb8dff37a921ae13d278d4
+x-b3-spanid: 4b0c5607c1717238
+apple-seq: 0.0
+apple-tk: false
+apple-originating-system: UnknownOriginatingSystem
+Vary: Accept-Encoding
+Content-Encoding: gzip
+X-Responding-Instance: olympus-rest:20202:mr00p00it-vmolympusrest002:9013:25G23
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+x-daiquiri-instance: daiquiri:15751001:mr36p00it-hyhk07174801:7987:25RELEASE50:daiquiri-amp-dsce-asc-int-002-mr
+x-frame-options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-Content-Security-Policy: script-src 'self' *.apple.com
+x-daiquiri-instance: daiquiri:18493001:mr85p00it-hyhk03154801:7987:25RELEASE50:daiquiri-amp-all-shared-ext-001-mr
+x-link-via: stcm04:443;xianymp018:443;fzct321:443;
+X-Cache-Status: MISS from KS-CLOUD-FZ-CT-321-15
+X-Cache-Status: MISS from KS-CLOUD-XIANY-MP-018-10
+X-Cache-Status: MISS from KS-CLOUD-ST-CM-04-06-L
+X-KSC-Request-ID: e477e4a20ba6e7250acc708003a49914
+X-Cache: MISS KS-CLOUD
+CDN-Server: ksft
+X-Cdn-Request-ID: e477e4a20ba6e7250acc708003a49914
+Connection: keep-alive
+
+{
+  "user" : {
+    "fullName" : "英科 周",
+    "firstName" : "英科",
+    "lastName" : "周",
+    "emailAddress" : "yanwen1688@gmail.com",
+    "prsId" : "1923141427"
+  },
+  "provider" : null,
+  "theme" : "ITUNES_CONNECT_FILM_TV",
+  "availableProviders" : [ ],
+  "backingType" : null,
+  "backingTypes" : [ ],
+  "roles" : [ ],
+  "unverifiedRoles" : [ ],
+  "featureFlags" : [ ],
+  "agreeToTerms" : false,
+  "termsSignatures" : [ ],
+  "modules" : [ ],
+  "helpLinks" : [ {
+    "key" : "All",
+    "url" : "https://itunespartner.apple.com",
+    "localizedText" : "All Resources and Help"
+  }, {
+    "key" : "News",
+    "url" : "https://itunespartner.apple.com/news/",
+    "localizedText" : "News"
+  }, {
+    "key" : "Videos",
+    "url" : "https://itunespartner.apple.com/videos/",
+    "localizedText" : "Videos"
+  }, {
+    "key" : "Guides",
+    "url" : "https://itunespartner.apple.com/guides/",
+    "localizedText" : "Guides"
+  }, {
+    "key" : "FAQ",
+    "url" : "https://itunespartner.apple.com/faq/",
+    "localizedText" : "FAQ"
+  }, {
+    "key" : "ContactUs",
+    "url" : "https://www.apple.com/itunes/go/itunesconnect/contactus",
+    "localizedText" : "Contact Us"
+  } ],
+  "userProfile" : null,
+  "publicUserId" : null,
+  "ofacState" : "CLEARED",
+  "creationDate" : null
+}

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/srp"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/appuploader/apple-service-v3/util"
@@ -42,9 +43,8 @@ func NewAppleAuthClient() *IdmsaClient {
 		"Accept":             "application/json, text/javascript",
 		"Accept-Encoding":    "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
 	}
-
-	hClient := httpz.NewHttpClient(http.DefaultClient.Jar)
-
+	jar, _ := cookiejar.New(nil)
+	hClient := httpz.NewHttpClient(jar)
 	return &IdmsaClient{
 		httpClient:  hClient,
 		baseHeaders: headers,
@@ -359,10 +359,12 @@ func (c *IdmsaClient) FetchItcCookies() *httpz.HttpResponse {
 	return response
 }
 func (c *IdmsaClient) saveCookiesToFile() error {
-	// 获取所有cookie
-	cookies := c.httpClient.Jar.Cookies(nil)
+	cookies := c.httpClient.Jar.(*cookiejar.Jar).AllCookies()
 	cookieValues := map[string]string{}
 	for _, cookie := range cookies {
+		if strings.Index(cookie.Domain, "apple.com") < 0 {
+			continue
+		}
 		cookieValues[cookie.Name] = cookie.Value
 	}
 	return storage.Write(c.username, storage.TokenTypeItc, cookieValues)
@@ -373,6 +375,13 @@ func (c *IdmsaClient) VerifyCode(codeType string, code string, phoneId string) *
 		return c.VerifyDeviceCode(code)
 	} else {
 		return c.VerifySMSVoiceCode(phoneId, code, codeType)
+	}
+}
+func (c *IdmsaClient) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
+	if codeType == VerifyCodeMode_Device {
+		return c.RequestDeviceCode()
+	} else {
+		return c.RequestSMSVoiceCode(phoneId, codeType)
 	}
 }
 
