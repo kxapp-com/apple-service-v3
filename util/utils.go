@@ -1,4 +1,4 @@
-package idmsa
+package util
 
 import (
 	"crypto/sha1"
