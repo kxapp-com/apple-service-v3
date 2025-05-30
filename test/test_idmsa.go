@@ -15,7 +15,7 @@ func main() {
 		fmt.Println(e)
 		return
 	}
-	r, e2 := idmsaClient.Login("yanwen1688test@gmail.com", "MzdJzm382")
+	r, e2 := idmsaClient.Login("yanwen16882@gmail.com", "MzdJzm382")
 	//r, e2 := idmsaClient.Login("yanwen1688@gmail.com", "MzdJzm38")
 	//r, e2 := idmsaClient.Login("liya1550120@163.com", "Li123123.")
 	if e2 != nil {

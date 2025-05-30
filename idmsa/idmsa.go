@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/srp"
+	"github.com/appuploader/apple-service-v3/util"
 	"golang.org/x/crypto/pbkdf2"
 	"hash"
 	"net/http"
@@ -18,16 +19,22 @@ import (
 	"strings"
 )
 
-const _HEADER_SESSION_ID_KEY = "X-Apple-Id-Session-Id"
+const _HEADER_SESSION_ID_KEY = "X-Apple-ID-Session-Id"
 const _X_Apple_Auth_Attributes_KEY = "X-Apple-Auth-Attributes"
 const _HEADER_SCNT_KEY = "scnt"
 
 // X-Apple-I-FD-Client-Info https://gist.github.com/borgle/c278a56511aa5cea39bd2a5b62d5f7e9
 // https://github.com/beeper/imessage/tree/main/imessage/appleid
 type IdmsaClient struct {
-	HttpClient        *http.Client
-	appConfig         AppConfig
-	initAppResult     InitAppResult
+	HttpClient *http.Client
+	appConfig  AppConfig
+
+	XAppleAuthAttributes   string
+	XAppleHCBits           string
+	XAppleHCChallenge      string
+	XAppleIDAccountCountry string
+
+	//initAppResult     InitAppResult
 	baseHeaders       map[string]string
 	username          string
 	password          string
@@ -49,18 +56,21 @@ func NewClient(cookieString string) (*IdmsaClient, error) {
 	httpClient := httpz.NewHttpClient(nil)
 	var c = &IdmsaClient{HttpClient: httpClient}
 	c.baseHeaders = map[string]string{
-		"Sec-Fetch-User":     "?1",
+		//"Sec-Fetch-User":     "?1",
 		"Connection":         "keep-alive",
+		"Cache-Control":      "no-cache",
 		"sec-ch-ua-platform": `"Windows"`,
-		"sec-ch-ua":          `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`,
+		"sec-ch-ua":          `"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"`,
 		"sec-ch-ua-mobile":   "?0",
-		"User-Agent":         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+		"User-Agent":         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
 		"Sec-Fetch-Site":     "same-origin",
 		"Sec-Fetch-Mode":     "cors",
 		"Sec-Fetch-Dest":     "empty",
 		"Accept-Encoding":    "gzip, deflate, br, zstd",
-		"Accept-Language":    "en,zh-CN;q=0.9,zh;q=0.8",
+		//"Accept-Language":    "en,en-GB;q=0.9,en-US;q=0.8",
+		"Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-AU;q=0.7,en-CA;q=0.6,en-US;q=0.5",
 	}
+	//c.baseHeaders["X-Apple-I-FD-Client-Info"] = `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0","L":"en","Z":"GMT+08:00","V":"1.1","F":"sla44j1e3NlY5BNlY5BSmHACVZXnNA96eNdTYebe5zLs2dI_AIQjvEodUW2vqBBNkrk0ugN.xL269v69WJQStbuIEpSUTlWY5BNlYJNNlY5QB4bVNjMk.C6v"}`
 	if cookieString != "" {
 		c.baseHeaders["Cookie"] = cookieString
 	}
@@ -94,66 +104,49 @@ func (c *IdmsaClient) GetResource(requestURL string) {
 初始化，获取WidgetKeyResponse，里面包含了frameid，widgetid，locale等一堆信息
 */
 func (c *IdmsaClient) getWidgetKey() (*httpz.HttpResponse, error) {
-	c.GetResource("https://account.apple.com/sign-in")
-	c.GetResource("https://www.apple.com/ac/globalfooter/7/en_US/styles/ac-globalfooter.built.css")
-	c.GetResource("https://account.apple.com/bootstrap/portal")
-	iframeID := generateIframeId()
-	params := map[string]string{
-		"frame_id":      iframeID,
-		"skVersion":     "7",
-		"iframeId":      iframeID,
-		"client_id":     "af1139274f266b22b68c2a3e7ad932cb3c0bbe854e13a79af78dcc73136882c3",
-		"redirect_uri":  "https://account.apple.com",
-		"response_type": "code",
-		"response_mode": "web_message",
-		"state":         iframeID,
-		"authVersion":   "latest",
-	}
-	urlValues := url.Values{}
-	for key, value := range params {
-		urlValues.Add(key, value)
-	}
-	// 构建 URL
-	baseURL := "https://idmsa.apple.com/appleauth/auth/authorize/signin"
-
-	requestURL := baseURL + "?" + urlValues.Encode()
-
-	//var requestURL = fmt.Sprintf("%s?frame_id=%s&skVersion=%s&iframeId=%s&client_id=%s&redirect_uri=%s&response_type=code&response_mode=web_message&state=%s&authVersion=latest",
-	//	requestHost, iframeID, skVersion, iframeID, clientID, redirectUri, iframeID)
-	requestHeaders := map[string]string{
-		"Sec-Fetch-Mode":            "navigate",
-		"Sec-Fetch-Dest":            "iframe",
-		"Upgrade-Insecure-Requests": "1",
-		"Referer":                   "https://account.apple.com/",
-		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-	}
-	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).Request(c.HttpClient)
+	//c.GetResource("https://developer.apple.com/account/")
+	//requestURL := "https://idmsa.apple.com/IDMSWebAuth/signin?appIdKey=891bd3417a7776362562d2197f89480a8547b108fd934911bcbea0110d07f757&path=%2Faccount%2F&rv=1"
+	//requestHeaders := map[string]string{
+	//	"Sec-Fetch-Mode":            "navigate",
+	//	"Sec-Fetch-Dest":            "iframe",
+	//	"Upgrade-Insecure-Requests": "1",
+	//	"Referer":                   "https://account.apple.com/",
+	//	"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+	//}
+	requestURL := "https://developer.apple.com/account/"
+	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).AddHeaders(c.baseHeaders).Request(c.HttpClient)
 	if response.HasError() {
 		return response, response.Error
 	}
-	re := regexp.MustCompile(`<script type="application/json" class="boot_args">\s*(.*?)\s*</script>`)
+	re := regexp.MustCompile(`<script type="application/json" id="embed_login_boot_args">\s*(.*?)\s*</script>`)
 	//re := regexp.MustCompile(`<script type="application/json" class="boot_args">\s*(.*?)\s*</script>`)
 	// 查找匹配的内容
 	matches := re.FindAllStringSubmatch(string(response.Body), -1)
 
-	if len(matches) > 1 {
+	if len(matches) > 0 {
 		var appConfig AppConfig
 		e := json.Unmarshal([]byte(matches[0][1]), &appConfig)
 		if e != nil {
 			return response, e
 		}
 		c.appConfig = appConfig
-
-		var initResult InitAppResult
-		e2 := json.Unmarshal([]byte(matches[1][1]), &initResult)
-		if e2 != nil {
-			return response, e2
-		}
-		c.initAppResult = initResult
+		c.getSign()
 		return response, nil
 	} else {
 		return response, errors.New("load widget key fail,retry or contact us 1974527954@qq.com")
 	}
+}
+
+func (c *IdmsaClient) getSign() *httpz.HttpResponse {
+	authInfo := c.appConfig.Direct.AuthWidgetConfig
+	requestURL := fmt.Sprintf("https://idmsa.apple.com/appleauth/auth/signin?widgetKey=%s&language=%s&skVersion=%s&iframeId=%s&appId=632&authVersion=latest",
+		authInfo.WidgetKey, c.appConfig.Direct.Locale, authInfo.SkVersion, c.appConfig.Direct.IframeId)
+	r := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).AddHeaders(c.baseHeaders).Request(c.HttpClient)
+	c.XAppleAuthAttributes = r.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleHCBits = r.Header.Get("X-Apple-HC-Bits")
+	c.XAppleHCChallenge = r.Header.Get("X-Apple-HC-Challenge")
+	c.scnt = r.Header.Get(_HEADER_SCNT_KEY)
+	return r
 }
 
 /*
@@ -161,43 +154,58 @@ func (c *IdmsaClient) getWidgetKey() (*httpz.HttpResponse, error) {
 更新X-Apple-HC-Challenge
 */
 func (c *IdmsaClient) postFederate() (*httpz.HttpResponse, error) {
+
 	var requestURL = fmt.Sprintf("https://idmsa.apple.com/appleauth/auth/federate?isRememberMeEnabled=true")
-
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+	//	"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+	//	"X-Apple-Locale":          c.appConfig.Direct.Locale,
+	//	"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+	//	"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+	//	"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+	//
+	//	"X-Requested-With": "XMLHttpRequest",
+	//	"Accept":           "application/json, text/javascript, */*; q=0.01",
+	//	"Content-Type":     "application/json",
+	//	"Origin":           "https://idmsa.apple.com",
+	//	"Referer":          "https://idmsa.apple.com/",
+	//}
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":   strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-OAuth-State": c.appConfig.Direct.AppleOAuth.Requestor.State,
-		//"X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36","L":"en","Z":"GMT+08:00","V":"1.1","F":".ta44j1e3NlY5BNlY5BSmHACVZXnNA9bgbfqv5W_H1zLs2dI_AIQjvEodUW2vqBBNtQs.xLB.Tf1YXdDK1cqvojn9UdWy855BNlY5CGWY5BOgkLT0XxU..CIO"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-OAuth-Client-Id":     c.appConfig.Direct.AppleOAuth.Requestor.Id,
-
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-
-		"X-Requested-With": "XMLHttpRequest",
-		"Accept":           "application/json, text/javascript, */*; q=0.01",
-		"Content-Type":     "application/json",
-		"Origin":           "https://idmsa.apple.com",
-
-		"Referer": "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+		"X-Requested-With":        "XMLHttpRequest",
+		"Accept":                  "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":            "application/json",
+		//"User-Agent":              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
 	}
+	//	X-Apple-Auth-Attributes: J51+y4tTkd7AjBnVvQYAJTP43yFpmA==
+	//		X-Apple-App-Id: 632
+	//	X-Apple-Locale: CN-ZH
+	//	X-Apple-Frame-Id: daw-86400d9c-da0b-4c7e-b85a-04ace0ce692b
+	//	X-Requested-With: XMLHttpRequest
+	//	X-Apple-Widget-Key: 92f19b477c5c9be6ab17f3ec2b1b2b7db4d00a9a8c973e3d6c90dac08b91de71
+	//Accept: application/json, text/javascript, */*; q=0.01
+	//Content-Type: application/json
+	//User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36
+	//
+	//{"accountName":"yanwen1688@gmail.com","rememberMe":true}
 
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
-		AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).AddBody(map[string]interface{}{
+	param := map[string]interface{}{
 		"accountName": c.username,
-		"rememberMe":  false,
-	}).Request(c.HttpClient)
+		"rememberMe":  true,
+	}
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).AddHeaders(requestHeaders).AddBody(param).Request(c.HttpClient)
+
+	//response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
+	//	AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).AddBody(param).Request(c.HttpClient)
 	if response.HasError() {
 		return response, response.Error
 	}
-	bitsstring := response.Header.Get("X-Apple-HC-Bits")
-	challenge := response.Header.Get("X-Apple-HC-Challenge")
-	c.initAppResult.Direct.Hashcash.HcChallenge = challenge
-	c.initAppResult.Direct.Hashcash.HcBits = bitsstring
+	c.XAppleHCBits = response.Header.Get("X-Apple-HC-Bits")
+	c.XAppleHCChallenge = response.Header.Get("X-Apple-HC-Challenge")
 
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
 	return response, nil
@@ -260,26 +268,42 @@ func (c *IdmsaClient) startInit() (*httpz.HttpResponse, error) {
 func (c *IdmsaClient) postInit(srpInitData map[string]any) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/signin/init"
 
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":   strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-OAuth-State": c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	"scnt":                        c.scnt,
+	//	"Content-Type":                "application/json",
+	//	"X-Requested-With":            "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":     c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":     c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI":  c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
+
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":   strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-OAuth-State": c.appConfig.Direct.AppleOAuth.Requestor.State,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		"scnt":                        c.scnt,
-		"Content-Type":                "application/json",
-		"X-Requested-With":            "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":     c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":     c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI":  c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
 
 	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
 		AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).AddBody(srpInitData).Request(c.HttpClient)
@@ -299,28 +323,44 @@ func (c *IdmsaClient) postComplete(preResponse *httpz.HttpResponse, srpInitResul
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/signin/complete?isRememberMeEnabled=true"
 
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":   strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-OAuth-State": c.appConfig.Direct.AppleOAuth.Requestor.State,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		"scnt":                        c.scnt,
-		"Content-Type":                "application/json",
-		"X-Requested-With":            "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":     c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":     c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI":  c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
-	}
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
 
-	bits, _ := strconv.Atoi(c.initAppResult.Direct.Hashcash.HcBits)
-	xAppleHC := MakeAppleHashCash(bits, c.initAppResult.Direct.Hashcash.HcChallenge)
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
+	}
+	requestHeaders["scnt"] = c.scnt
+	//
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":   strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-OAuth-State": c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	"scnt":                        c.scnt,
+	//	"Content-Type":                "application/json",
+	//	"X-Requested-With":            "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":     c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":     c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI":  c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
+
+	bits, _ := strconv.Atoi(c.XAppleHCBits)
+	xAppleHC := util.MakeAppleHashCash(bits, c.XAppleHCChallenge)
 	requestHeaders["X-Apple-HC"] = xAppleHC
 
 	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
@@ -330,7 +370,9 @@ func (c *IdmsaClient) postComplete(preResponse *httpz.HttpResponse, srpInitResul
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
 	c.xAppleIDSessionId = response.Header.Get(_HEADER_SESSION_ID_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleIDAccountCountry = response.Header.Get("X-Apple-ID-Account-Country")
+	//trusTw: = response.Header.Get("X-Apple-TwoSV-Trust-Eligible")
 	if response.Status == http.StatusUnauthorized && strings.Contains(string(response.Body), "-20101") {
 		return response, errors.New("errorPassword")
 	} else if response.Status == http.StatusOK || response.Status == http.StatusFound {
@@ -351,7 +393,7 @@ func (c *IdmsaClient) postComplete(preResponse *httpz.HttpResponse, srpInitResul
 		}
 		return response, nil
 	} else {
-		return response, errors.New(ReadErrorMessage(response.Body))
+		return response, errors.New(util.ReadErrorMessage(response.Body))
 	}
 }
 
@@ -361,29 +403,45 @@ func (c *IdmsaClient) postComplete(preResponse *httpz.HttpResponse, srpInitResul
 */
 func (c *IdmsaClient) LoadTwoStepDevices() (*httpz.HttpResponse, *TwoStepDevicesResponse) {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth"
-
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		//"Accept":                      "text/html",
-		"scnt":                       c.scnt,
-		"Content-Type":               "application/json",
-		"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+	//
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	//"Accept":                      "text/html",
+	//	"scnt":                       c.scnt,
+	//	"Content-Type":               "application/json",
+	//	"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 
 	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).
 		AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).Request(c.HttpClient)
@@ -391,7 +449,10 @@ func (c *IdmsaClient) LoadTwoStepDevices() (*httpz.HttpResponse, *TwoStepDevices
 		return response, nil
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	//c.XAppleIDAccountCountry = response.Header.Get("X-Apple-ID-Account-Country")
+	//c.xAppleIDSessionId = response.Header.Get(_HEADER_SESSION_ID_KEY)
 	if (response.Status >= 200 && response.Status < 300) || response.Status == 423 {
 		var twoStepDevicesResponse TwoStepDevicesResponse
 		e := json.Unmarshal(response.Body, &twoStepDevicesResponse)
@@ -412,28 +473,45 @@ func (c *IdmsaClient) RequestSMSVoiceCode(phoneId string, mode string) (*httpz.H
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone"
 
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		//"Accept":                      "text/html",
-		"scnt":                       c.scnt,
-		"Content-Type":               "application/json",
-		"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+	//
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	//"Accept":                      "text/html",
+	//	"scnt":                       c.scnt,
+	//	"Content-Type":               "application/json",
+	//	"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 	param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, mode)
 	response := httpz.NewHttpRequestBuilder(http.MethodPut, requestURL).
@@ -442,13 +520,13 @@ func (c *IdmsaClient) RequestSMSVoiceCode(phoneId string, mode string) (*httpz.H
 		return response, response.Error
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	if response.HasError() {
 		return response, response.Error
 	} else if response.Status == http.StatusOK || response.Status == http.StatusAccepted {
 		return response, nil
 	} else {
-		return response, errors.New(ReadErrorMessage(response.Body))
+		return response, errors.New(util.ReadErrorMessage(response.Body))
 	}
 }
 
@@ -459,29 +537,46 @@ func (c *IdmsaClient) VerifySMSVoiceCode(phoneId string, code string, mode strin
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone/securitycode"
 
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		"Accept": "application/json, text/plain, */*",
-		//"Accept":                      "text/html",
-		"scnt":         c.scnt,
-		"Content-Type": "application/json",
-		//"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+	//
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	"Accept": "application/json, text/plain, */*",
+	//	//"Accept":                      "text/html",
+	//	"scnt":         c.scnt,
+	//	"Content-Type": "application/json",
+	//	//"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 	//param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	nonFTEU := false
 	for _, device := range c.TwoStepDevicesResponse.TrustedPhoneNumbers {
@@ -503,14 +598,14 @@ func (c *IdmsaClient) VerifySMSVoiceCode(phoneId string, code string, mode strin
 		return response, response.Error
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	if response.Status == http.StatusOK || response.Status == http.StatusAccepted {
 		c.Myacinfo = response.CookieValue("myacinfo")
 		c.dslang = response.CookieValue("dslang")
 		c.Trust()
 		return response, nil
 	} else {
-		return response, errors.New(ReadErrorMessage(response.Body))
+		return response, errors.New(util.ReadErrorMessage(response.Body))
 	}
 }
 
@@ -520,29 +615,47 @@ func (c *IdmsaClient) VerifySMSVoiceCode(phoneId string, code string, mode strin
 */
 func (c *IdmsaClient) RequestDeviceCode() (*httpz.HttpResponse, error) {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
+
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		//"Accept":                      "text/html",
-		"scnt":                       c.scnt,
-		"Content-Type":               "application/json",
-		"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+	//
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	//"Accept":                      "text/html",
+	//	"scnt":                       c.scnt,
+	//	"Content-Type":               "application/json",
+	//	"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 
 	//param:= map[string]interface{}{}
 	param := "{}"
@@ -552,11 +665,11 @@ func (c *IdmsaClient) RequestDeviceCode() (*httpz.HttpResponse, error) {
 		return response, response.Error
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	if response.Status == http.StatusOK || response.Status == http.StatusAccepted {
 		return response, nil
 	} else {
-		return response, errors.New(ReadErrorMessage(response.Body))
+		return response, errors.New(util.ReadErrorMessage(response.Body))
 	}
 }
 
@@ -565,29 +678,46 @@ func (c *IdmsaClient) RequestDeviceCode() (*httpz.HttpResponse, error) {
 */
 func (c *IdmsaClient) VerifyDeviceCode(code string) (*httpz.HttpResponse, error) {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	//"Accept":                      "text/html",
+	//	"scnt":                       c.scnt,
+	//	"Content-Type":               "application/json",
+	//	"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		//"Accept":                      "text/html",
-		"scnt":                       c.scnt,
-		"Content-Type":               "application/json",
-		"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+
 	//param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param := `{"securityCode":{"code":"%s"}}`
 	param = fmt.Sprintf(param, code)
@@ -597,14 +727,14 @@ func (c *IdmsaClient) VerifyDeviceCode(code string) (*httpz.HttpResponse, error)
 		return response, response.Error
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	if response.Status == http.StatusOK || response.Status == http.StatusNoContent {
 		c.Myacinfo = response.CookieValue("myacinfo")
 		c.dslang = response.CookieValue("dslang")
 		c.Trust()
 		return response, nil
 	} else {
-		return response, errors.New(ReadErrorMessage(response.Body))
+		return response, errors.New(util.ReadErrorMessage(response.Body))
 	}
 }
 
@@ -614,28 +744,44 @@ icloud登录用于信任设备
 func (c *IdmsaClient) Trust() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/2sv/trust"
 	requestHeaders := map[string]string{
-		"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
-		"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
-		"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
-		"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
-		"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
-		"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
-		"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"Accept":                      "application/json, text/javascript, */*; q=0.01",
-		//"Accept":                      "text/html",
-		"scnt":                       c.scnt,
-		"Content-Type":               "application/json",
-		"X-Requested-With":           "XMLHttpRequest",
-		"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
-		"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
-		"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
-		//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
-		"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
-		"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
-		"Origin":                      "https://idmsa.apple.com",
-		"Referer":                     "https://idmsa.apple.com/",
+		"X-Apple-Auth-Attributes": c.XAppleAuthAttributes,
+		"X-Apple-App-Id":          strconv.Itoa(c.appConfig.Direct.AppId),
+		"X-Apple-Locale":          c.appConfig.Direct.Locale,
+		"X-Apple-Trusted-Domain":  "https://idmsa.apple.com",
+		"X-Apple-Frame-Id":        c.appConfig.Direct.IframeId,
+		"X-Apple-Widget-Key":      c.appConfig.Direct.AuthWidgetConfig.WidgetKey,
+
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		"Content-Type":     "application/json",
+		"Origin":           "https://idmsa.apple.com",
+		"Referer":          "https://idmsa.apple.com/",
 	}
+	requestHeaders["scnt"] = c.scnt
+	requestHeaders["X-Apple-ID-Session-Id"] = c.xAppleIDSessionId
+	//requestHeaders := map[string]string{
+	//	"X-Apple-Domain-Id":     strconv.Itoa(c.initAppResult.Direct.DomainId),
+	//	"X-Apple-ID-Session-Id": c.xAppleIDSessionId,
+	//	"X-Apple-OAuth-State":   c.appConfig.Direct.AppleOAuth.Requestor.State,
+	//	"X-Apple-App-Id":        c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	//"X-Apple-I-FD-Client-Info":   `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"7la44j1e3NlY5BNlY5BSmHACVZXnNA9bgP3B80MLLzLu_dYV6Hycfx9MsFY5Bhw.Tf5.EKWJ9Y69D96m_UdHzJJNlY5BNp55BNlan0Os5Apw.Bbq"}`,
+	//	"X-Apple-Frame-Id":            c.initAppResult.Direct.IframeId,
+	//	"X-Apple-OAuth-Response-Mode": c.appConfig.Direct.AppleOAuth.Requestor.ResponseMode,
+	//	"X-Apple-Widget-Key":          c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"Accept":                      "application/json, text/javascript, */*; q=0.01",
+	//	//"Accept":                      "text/html",
+	//	"scnt":                       c.scnt,
+	//	"Content-Type":               "application/json",
+	//	"X-Requested-With":           "XMLHttpRequest",
+	//	"X-Apple-OAuth-Client-Id":    c.appConfig.Direct.AppleOAuth.Requestor.Id,
+	//	"X-Apple-Auth-Attributes":    c.initAppResult.Direct.AuthAttributes,
+	//	"X-Apple-OAuth-Redirect-URI": c.appConfig.Direct.AppleOAuth.Requestor.RedirectURI,
+	//	//"X-Apple-OAuth-Redirect-URI": "https://account.apple.com",
+	//	"X-Apple-OAuth-Response-Type": c.appConfig.Direct.AppleOAuth.Requestor.ResponseType,
+	//	"X-Apple-OAuth-Client-Type":   c.appConfig.Direct.AppleOAuth.Requestor.Type,
+	//	"Origin":                      "https://idmsa.apple.com",
+	//	"Referer":                     "https://idmsa.apple.com/",
+	//}
 	requestHeaders["X-Apple-OAuth-Require-Grant-Code"] = "true"
 	requestHeaders["X-Apple-Offer-Security-Upgrade"] = "1"
 	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).
@@ -644,7 +790,7 @@ func (c *IdmsaClient) Trust() *httpz.HttpResponse {
 		return response
 	}
 	c.scnt = response.Header.Get(_HEADER_SCNT_KEY)
-	c.initAppResult.Direct.AuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
+	c.XAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	//trust设备，会更新myacinfo和aidshd，和返回一个新的des开头的cookie。nottrust 的时候没有DESxxxxxx，只有一个_DESxxxxxxxxxx
 	if mc := response.Cookie("^DES*", true); mc != nil {
 		c.DesCookieName = mc.Name
@@ -664,9 +810,9 @@ func (c *IdmsaClient) signinDeveloperCenter() *httpz.HttpResponse {
 	params := map[string]string{
 		"rememberMe": "false",
 		"grantCode":  "",
-		"iframeId":   c.appConfig.Direct.AppleOAuth.Requestor.FrameId,
+		"iframeId":   c.appConfig.Direct.IframeId,
 		"requestUri": "/signin",
-		"appIdKey":   c.appConfig.Direct.AppleOAuth.Requestor.Id,
+		"appIdKey":   c.appConfig.Direct.App.AppIdKey,
 		"language":   c.dslang,
 		"rv":         "1",
 		"scnt":       c.scnt,
@@ -738,7 +884,7 @@ func GetOlympusSession(cookieHeader string) (string, string, error) {
 	return "", "", errors.New("no itc cookie found")
 }
 
-type AppConfig struct {
+type AppConfigV1 struct {
 	Direct struct {
 		DestinationDomain string `json:"destinationDomain"`
 		AppleOAuth        struct {
