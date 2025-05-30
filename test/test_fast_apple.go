@@ -9,18 +9,13 @@ import (
 )
 
 func main() {
-	//jar, _ := cookiejar.New(nil)
-	////jar := http.DefaultClient.Jar
-	//hClient := httpz.NewHttpClient(jar)
-	//r2 := httpz.NewHttpRequestBuilder(http.MethodGet, "https://idmsa.apple.com/IDMSWebAuth/signin?appIdKey=891bd3417a7776362562d2197f89480a8547b108fd934911bcbea0110d07f757&path=%2Faccount%2F&rv=1").Request(hClient)
-	//u, _ := url.Parse("https://www.apple.com")
-	//cookies := hClient.Jar.Cookies(u)
-	//v := r2.Header.Get("Set-Cookie")
-	//fmt.Println(r2, cookies, v)
 
-	client := fastapple.NewAppleAuthClient()
 	account := "877028320@qq.com"
-	fmt.Println(fastapple.IsSessionAlive(account))
+	if fastapple.IsSessionAlive(account) {
+		fmt.Printf("session is alive for account %s\n", account)
+		return
+	}
+	client := fastapple.NewAppleAuthClient()
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
