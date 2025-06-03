@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
-	"github.com/appuploader/apple-service-v3/fastapple"
+	"github.com/appuploader/apple-service-v3/fastlang"
 	"github.com/appuploader/apple-service-v3/xcode"
 	"time"
 )
@@ -11,12 +11,12 @@ import (
 func main() {
 
 	account := "877028320@qq.com"
-	if fastapple.IsSessionAlive(account) {
+	if fastlang.IsSessionAlive(account) {
 		fmt.Printf("session is alive for account %s\n", account)
 		onSuccess(account)
 		return
 	}
-	client := fastapple.NewAppleAuthClient()
+	client := fastlang.NewAppleAuthClient()
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
@@ -103,7 +103,7 @@ func main() {
 	time.Sleep(time.Minute * 5)
 }
 func onSuccess(account string) {
-	a := fastapple.NewDevApiV1(account)
+	a := fastlang.NewDevApiV1(account)
 	t := a.GetItcTeams()
 	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
 }

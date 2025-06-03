@@ -1,4 +1,4 @@
-package fastapple
+package fastlang
 
 import (
 	"gitee.com/kxapp/kxapp-common/httpz"

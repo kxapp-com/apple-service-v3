@@ -1,4 +1,4 @@
-package fastapple
+package fastlang
 
 import (
 	"encoding/base64"
