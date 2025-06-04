@@ -16,15 +16,10 @@ import (
 
 type Client struct {
 	httpClient *http.Client
-	//Token          *XcodeToken
-	//xcodeSessionID string
-
-	//anisseteData   *appuploader.AnisseteData
-	userName string
-	password string
-
-	headers   map[string]string
-	serverURL string
+	userName   string
+	password   string
+	fa2Headers map[string]string
+	serverURL  string
 }
 
 func NewClient() *Client {
@@ -36,12 +31,6 @@ func NewClient() *Client {
 func (client *Client) Login(userName string, password string) *httpz.HttpResponse {
 	client.userName = userName
 	client.password = password
-	//t, e := storage.Read[XcodeToken](userName, storage.TokenTypeXcode)
-	//if e == nil {
-	//	client.Token = t
-	//} else {
-	//	client.Token = &XcodeToken{}
-	//}
 	return client.CheckPassword()
 }
 
@@ -53,8 +42,6 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	anissete, ee := appuploader.GetAnisseteFromAu(client.userName)
 	if ee != nil {
 		return &httpz.HttpResponse{Error: ee, Status: 500}
-		//return ParsedResponse{Status: ee.Error()}
-		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
 
 	result, status := gsa.Login(client.userName, client.password, anissete)
@@ -66,13 +53,11 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	if e3 != nil {
 		return &httpz.HttpResponse{Error: e3, Status: 500}
 	}
-	//return &spd, nil
 	if spd.StatusCode == http.StatusConflict {
-		//client.anisseteData = anissete
-		client.headers = xcodeStep2Header()
-		maps.Copy(client.headers, anissete.ToMap())
-		client.headers["X-Apple-Identity-Token"] = spd.GetAppleIdToken()
-		//client.fa2Client = NewXcodeFa2Client(client.httpClient, spd.GetAppleIdToken(), anissete)
+		client.fa2Headers = xcodeStep2Header()
+		maps.Copy(client.fa2Headers, anissete.ToMap())
+		client.fa2Headers["X-Apple-Identity-token"] = spd.GetAppleIdToken()
+
 	} else if spd.StatusCode == http.StatusOK {
 		xt, e := gsa.FetchXCodeToken(&spd, anissete)
 		if e != nil {
@@ -84,8 +69,6 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 				XAppleGSToken: xt.Token,
 				Adsid:         spd.Adsid,
 			}
-			//client.Token.XAppleGSToken = xt.Token
-			//client.Token.Adsid = spd.Adsid
 			saveE := storage.Write(client.userName, storage.TokenTypeXcode, token)
 			if saveE != nil {
 				fmt.Println("save token error", saveE)
@@ -97,36 +80,8 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	return &httpz.HttpResponse{Error: errors.New(fmt.Sprintf("unknown result status %v,please contact us", spd.StatusCode)), Status: spd.StatusCode}
 
 }
-
-//	func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
-//		return client.fa2Client.LoadTwoStepDevices()
-//		//if e != nil {
-//		//	return e.AsStatusResult()
-//		//}
-//		//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
-//	}
-//
-//	func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
-//		return client.fa2Client.RequestVerifyCode(codeType, phoneId)
-//	}
-//
-// /*
-// 在verify返回成功后请立即调用CheckPassword再次登录
-// */
-//
-//	func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
-//		r := client.fa2Client.VerifyCode(codeType, code, phoneId)
-//		if r.Status == http.StatusOK {
-//			return client.CheckPassword()
-//		}
-//		return r
-//	}
-//
-// /*
-// 没登录状态调用返回status http.StatusUnauthorized
-// */
 func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
-	request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers)
+	request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.fa2Headers)
 	//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
 	request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
 	return request.Request(client.httpClient)
@@ -148,16 +103,15 @@ func (client *Client) VerifyCode(codeType string, code string, phoneId string) *
 校验短信或者电话验证码
 */
 func (client *Client) verifySMSVoiceCode(phoneId string, code string, codeType string) *httpz.HttpResponse {
-	//param := `{"phoneNumber": {"id": %s}, "securityCode": {"code": %s}, "mode": "%s"}`
 	param := `{"phoneNumber": {"id": %s}, "securityCode": {"code": "%s"}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, code, codeType)
 	urlStr := client.serverURL + "/verify/phone/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.fa2Headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 func (client *Client) requestDeviceCode() *httpz.HttpResponse {
 	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.fa2Headers).Request(client.httpClient)
 	return response
 }
 
@@ -168,7 +122,7 @@ func (client *Client) verifyDeviceCode(code string) *httpz.HttpResponse {
 	param := `{"securityCode": {"code": "%s"}}`
 	param = fmt.Sprintf(param, code)
 	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.fa2Headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 
@@ -184,7 +138,7 @@ func (client *Client) requestSMSVoiceCode(phoneId string, t string) *httpz.HttpR
 	param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
 	param = fmt.Sprintf(param, phoneId, t)
 	urlStr := client.serverURL + "/verify/phone"
-	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.fa2Headers).AddBody(param).Request(client.httpClient)
 	return response
 }
 
@@ -208,19 +162,3 @@ func xcodeStep2Header() map[string]string {
 		//"X-Xcode-Version":   "12.4 (12D4e)",
 	}
 }
-
-//func AddAnisseteHeaders(data *appuploader.AnisseteData, headers map[string]string) map[string]string {
-//	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
-//	headers["X-Apple-I-MD"] = data.XAppleIMD
-//	headers["X-Apple-I-MD-LU"] = data.XAppleIMDLU
-//	headers["X-Apple-I-MD-M"] = data.XAppleIMDM
-//	headers["X-Apple-I-MD-RINFO"] = data.XAppleIMDRINFO
-//	headers["X-Apple-I-TimeZone"] = data.XAppleITimeZone
-//	headers["X-Apple-Locale"] = data.XAppleLocale
-//	headers["X-Mme-Client-Info"] = data.XMmeClientInfo
-//	headers["X-Mme-Device-Id"] = data.XMmeDeviceId
-//	headers["X-Apple-I-Client-Time"] = time.Now().Format(XCode_Client_Time_Format)
-//	//headers["X-Apple-I-Client-Time"] = util.GetAppleClientTimeNowString3(data.XAppleIClientTime)
-//	//headers["X-Apple-I-Client-Time"] = time.Now().UTC().Format(util.XCode_Client_Time_Format)
-//	return headers
-//}

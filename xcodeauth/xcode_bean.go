@@ -4,8 +4,8 @@ import "time"
 
 type XcodeToken struct {
 	//Email string `json:"email"`
-	//gsa 业务逻辑请求中需要用到的头X-Apple-GS-Token
-	XAppleGSToken string `json:"X-Apple-GS-Token"`
+	//gsa 业务逻辑请求中需要用到的头X-Apple-GS-token
+	XAppleGSToken string `json:"X-Apple-GS-token"`
 	//gsa请求中需要用到的头X-Apple-I-Identity-Id
 	Adsid string `json:"Adsid"`
 }

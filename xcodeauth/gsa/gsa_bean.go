@@ -62,7 +62,7 @@ type GSAStatus struct {
 	RSH               bool   `plist:"rsh"`
 	AuthenticationURL string `plist:"au"` // If server-driven, URL of 2FA capture page  au=trustedDeviceSecondaryAuth status=409
 
-	TT    string `plist:"tt"`    //Token Type	Used to indicate the type of token returned in the response, if any
+	TT    string `plist:"tt"`    //token Type	Used to indicate the type of token returned in the response, if any
 	PTXID string `plist:"ptxid"` //PTX ID	Used to indicate the PTX ID of the request, if any
 }
 
