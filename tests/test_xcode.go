@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
-	"github.com/appuploader/apple-service-v3/xcode"
+	beans "github.com/appuploader/apple-service-v3/model"
+	xcode "github.com/appuploader/apple-service-v3/xcodeauth"
+
+	//"github.com/appuploader/apple-service-v3/xcode"
 	"time"
 )
 
@@ -13,10 +16,10 @@ func main() {
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@gmail.com", Password: "MzdJzm38"})
-	if r.Status == xcode.ErrorCodeInvalidAccount {
+	if r.Status == beans.ErrorCodeInvalidAccount {
 		fmt.Printf("invalid account %+v", r)
 		return
-	} else if r.Status == xcode.ErrorCodeInvalidPassword {
+	} else if r.Status == beans.ErrorCodeInvalidPassword {
 		fmt.Printf("invalid password %+v", r)
 		return
 	}

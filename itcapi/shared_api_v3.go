@@ -1,4 +1,4 @@
-package beans
+package itcapi
 
 import (
 	"fmt"
