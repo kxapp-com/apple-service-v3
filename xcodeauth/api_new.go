@@ -50,6 +50,31 @@ func (client *XcodeClient) ViewTeams() *httpz.HttpResponse {
 	return client.postXcode("listTeams.action")
 }
 
+func (client *XcodeClient) GetApiV3() *itcapi.ItcApiV3 {
+	header := map[string]string{
+		"User-Agent":       httpz.UserAgent_XCode_Simple,
+		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
+		"X-Requested-With": "XMLHttpRequest",
+		"Content-Type":     httpz.ContentType_VND_JSON,
+		"X-Apple-App-Info": "com.apple.gs.xcode.auth",
+		"X-Xcode-Version":  "14.2 (14C18)",
+	}
+	if client.token.XAppleGSToken != "" && client.token.Adsid != "" {
+		header["X-Apple-I-Identity-Id"] = client.token.Adsid
+		header["X-Apple-GS-token"] = client.token.XAppleGSToken
+	}
+	if client.xcodeSessionID != "" {
+		header["DSESSIONID"] = client.xcodeSessionID
+	}
+	maps.Copy(header, client.anisseteData.ToMap())
+	return &itcapi.ItcApiV3{
+		HttpClient:      client.httpClient,
+		ServiceURL:      "https://developerservices2.apple.com/services/v1/",
+		JsonHttpHeaders: header,
+		IsXcode:         true,
+	}
+}
+
 /*
 xcode plist request QH65B2
 */
@@ -100,28 +125,4 @@ func xcodeServiceHeader(gstoken string, adsid string) map[string]string {
 	headers["X-Apple-GS-token"] = gstoken
 	headers["X-Apple-I-Identity-Id"] = adsid
 	return headers
-}
-func (client *XcodeClient) DevApiV3() *itcapi.ItcApiV3 {
-	header := map[string]string{
-		"User-Agent":       httpz.UserAgent_XCode_Simple,
-		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
-		"X-Requested-With": "XMLHttpRequest",
-		"Content-Type":     httpz.ContentType_VND_JSON,
-		"X-Apple-App-Info": "com.apple.gs.xcode.auth",
-		"X-Xcode-Version":  "14.2 (14C18)",
-	}
-	if client.token.XAppleGSToken != "" && client.token.Adsid != "" {
-		header["X-Apple-I-Identity-Id"] = client.token.Adsid
-		header["X-Apple-GS-token"] = client.token.XAppleGSToken
-	}
-	if client.xcodeSessionID != "" {
-		header["DSESSIONID"] = client.xcodeSessionID
-	}
-	maps.Copy(header, client.anisseteData.ToMap())
-	return &itcapi.ItcApiV3{
-		HttpClient:      client.httpClient,
-		ServiceURL:      "https://developerservices2.apple.com/services/v1/",
-		JsonHttpHeaders: header,
-		IsXcode:         true,
-	}
 }

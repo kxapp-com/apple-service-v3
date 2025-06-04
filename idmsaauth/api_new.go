@@ -20,7 +20,33 @@ func NewDevClient(userName string) *DevClient {
 	userName = strings.ToLower(userName)
 	return &DevClient{userName: userName, httpClient: newHttpClientWithJar(userName)}
 }
-func (c *DevClient) NewDevApiV1() *itcapi.ItcApiV3 {
+
+func (c *DevClient) IsSessionAlive() bool {
+	response, err := c.httpClient.Get(fmt.Sprintf("%s/v1/profile", BaseURLItc))
+	if err != nil || response.StatusCode != http.StatusOK {
+		return false
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return false
+	}
+	return !strings.Contains(string(body), "session has expired")
+}
+
+func (c *DevClient) ViewTeams() *httpz.HttpResponse {
+	var itcHeader = map[string]string{
+		"User-Agent":       httpz.UserAgent_GoogleChrome,
+		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
+		"X-Requested-With": "XMLHttpRequest",
+		"X-Csrf-Itc":       "itc",
+	}
+	requestParams := `{"includeInMigrationTeams":1}`
+	request := httpz.Post("https://developer.apple.com/services-account/QH65B2/account/getTeams", itcHeader).ContentType(httpz.ContentType_JSON).
+		AddBody(requestParams).Request(c.httpClient)
+	return request
+}
+
+func (c *DevClient) GetApiV3() *itcapi.ItcApiV3 {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
@@ -34,32 +60,6 @@ func (c *DevClient) NewDevApiV1() *itcapi.ItcApiV3 {
 		IsXcode:         false,
 	}
 	return api
-}
-func (c *DevClient) GetItcTeams() *httpz.HttpResponse {
-	var itcHeader = map[string]string{
-		"User-Agent":       httpz.UserAgent_GoogleChrome,
-		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
-		"X-Requested-With": "XMLHttpRequest",
-		"X-Csrf-Itc":       "itc",
-	}
-	//httpClient := newHttpClientWithJar(userName)
-	requestParams := `{"includeInMigrationTeams":1}`
-	request := httpz.Post("https://developer.apple.com/services-account/QH65B2/account/getTeams", itcHeader).ContentType(httpz.ContentType_JSON).
-		AddBody(requestParams).Request(c.httpClient)
-	return request
-}
-
-func (c *DevClient) IsSessionAlive() bool {
-	//client := newHttpClientWithJar(userName)
-	response, err := c.httpClient.Get(fmt.Sprintf("%s/v1/profile", BaseURLItc))
-	if err != nil || response.StatusCode != http.StatusOK {
-		return false
-	}
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return false
-	}
-	return !strings.Contains(string(body), "session has expired")
 }
 
 func newHttpClientWithJar(userName string) *http.Client {
