@@ -125,13 +125,12 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 // /*
 // 没登录状态调用返回status http.StatusUnauthorized
 // */
-//
-//	func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
-//		request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers)
-//		//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
-//		request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
-//		return request.Request(client.httpClient)
-//	}
+func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
+	request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers)
+	//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
+	request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
+	return request.Request(client.httpClient)
+}
 func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
 	var r *httpz.HttpResponse
 	if codeType == "device" {

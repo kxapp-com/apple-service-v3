@@ -11,6 +11,7 @@ import (
 	"howett.net/plist"
 	"maps"
 	"net/http"
+	"strings"
 )
 
 type XcClient struct {
@@ -37,9 +38,12 @@ func NewXcClient(userName string) *XcClient {
 }
 
 func (client *XcClient) IsSessionAlive() bool {
-	if client.Token.XAppleGSToken != "" {
-		response := client.postXcode("viewDeveloper.action")
-		return response.Status == http.StatusOK
+	if client.Token == nil || client.Token.XAppleGSToken == "" || client.Token.Adsid == "" {
+		return false
+	}
+	response := client.postXcode("viewDeveloper.action")
+	if response.Status == http.StatusOK {
+		return !strings.Contains(string(response.Body), "session has expired")
 	}
 	return false
 }

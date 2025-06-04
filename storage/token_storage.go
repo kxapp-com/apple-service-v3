@@ -10,7 +10,8 @@ import (
 const (
 	TokenTypeXcode = "xcode"
 	TokenTypeItc   = "itc"
-	tokenPassword  = "appuploadertoken3"
+	//tokenPassword  = "appuploadertoken3"
+	tokenPassword = ""
 )
 
 func TokenPath(email, tokenType string) string {
@@ -19,7 +20,7 @@ func TokenPath(email, tokenType string) string {
 		h = "./"
 	}
 	//p := "./" + email + "/token." + tokenType
-	p := filepath.Join(h, "appuploader", "token3", email+tokenType)
+	p := filepath.Join(h, "appuploader", "token3", email+"."+tokenType)
 	os.MkdirAll(filepath.Dir(p), 0755)
 	return p
 }

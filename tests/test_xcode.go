@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
+	"gitee.com/kxapp/kxapp-common/httpz"
 	beans "github.com/appuploader/apple-service-v3/model"
 	xcode "github.com/appuploader/apple-service-v3/xcodeauth"
 
@@ -10,9 +11,21 @@ import (
 	"time"
 )
 
+var account = "877028320@qq.com"
+
 func main() {
+
+	api := xcode.NewXcClient(account)
+	if api.IsSessionAlive() {
+		fmt.Println("session is alive")
+		t := api.ViewTeams()
+		fmt.Println(t.Status, string(t.Body))
+		return
+	} else {
+		fmt.Println("session is not alive, try to login")
+	}
 	client := xcode.NewClient()
-	r := client.Login(xcode.AuthInfo{Email: "877028320@qq.com", Password: "MzdJzm38"})
+	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@gmail.com", Password: "MzdJzm38"})
@@ -24,23 +37,7 @@ func main() {
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
-		t := client.ViewTeams()
-		fmt.Println(t.Status, string(t.Body))
-		apiClient := xcode.NewDevApiV1(client)
-		apiClient.TeamId = "CS2ADD9F7F"
-		//apiClient.TeamId = t.Body.(*xcode.ViewTeamsResponse).Teams[0].TeamId
-		t = apiClient.ListDevices()
-		fmt.Println(t.Status, string(t.Body))
-		t = apiClient.ListBundleID()
-
-		fmt.Println(t.Status, string(t.Body))
-		//if e == nil {
-		//	for _, v := range *t {
-		//		fmt.Printf(v.Name)
-		//	}
-		//} else {
-		//	fmt.Printf(e.Error())
-		//}
+		onSuccessXcode(client, r)
 	} else if r.Status == 401 {
 		fmt.Printf("login failed")
 	} else if r.Status == 409 {
@@ -62,7 +59,7 @@ func main() {
 		//}
 		fmt.Printf("load device success\n")
 		fmt.Printf("%+v", deviceResult)
-		var phoneId = "3"
+		var phoneId = "1"
 		if tdStatus == 201 {
 			fmt.Println("please input device code")
 			var deviceCode string
@@ -79,8 +76,7 @@ func main() {
 				fmt.Println(verifyResult)
 			}
 			if verifyResult.Status == 200 {
-				vvv := client.ViewTeams()
-				fmt.Println(vvv)
+				onSuccessXcode(client, verifyResult)
 			}
 		} else if tdStatus == 200 {
 			fmt.Println("please input device id")
@@ -109,8 +105,7 @@ func main() {
 					fmt.Println(verifyResult)
 				}
 				if verifyResult.Status == 200 {
-					vvv := client.ViewTeams()
-					fmt.Println(vvv)
+					onSuccessXcode(client, verifyResult)
 				}
 			} else {
 				fmt.Printf("request code failed %+v", requestCodeResult)
@@ -123,4 +118,25 @@ func main() {
 		fmt.Printf("%+v", r)
 	}
 	time.Sleep(time.Minute * 5)
+}
+
+func onSuccessXcode(client *xcode.Client, r *httpz.HttpResponse) {
+	fmt.Println("login success")
+	c := xcode.NewXcClient(account)
+	f := c.ViewTeams()
+	fmt.Println(f.Status, string(f.Body))
+	api := c.DevApiV3()
+	api.TeamId = "CS2ADD9F7F"
+	t := api.ListDevices()
+	fmt.Println(t.Status, string(t.Body))
+	//t := client.ViewTeams()
+	//fmt.Println(t.Status, string(t.Body))
+	//apiClient := xcode.NewDevApiV1(client)
+	//apiClient.TeamId = "CS2ADD9F7F"
+	////apiClient.TeamId = t.Body.(*xcode.ViewTeamsResponse).Teams[0].TeamId
+	//t = apiClient.ListDevices()
+	//fmt.Println(t.Status, string(t.Body))
+	//t = apiClient.ListBundleID()
+	//
+	//fmt.Println(t.Status, string(t.Body))
 }
