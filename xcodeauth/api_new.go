@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-type XcClient struct {
+type XcodeClient struct {
 	httpClient     *http.Client
 	token          XcodeToken
 	xcodeSessionID string
@@ -22,8 +22,8 @@ type XcClient struct {
 	userName       string
 }
 
-func NewXcClient(userName string) *XcClient {
-	client := &XcClient{
+func NewXcodeClient(userName string) *XcodeClient {
+	client := &XcodeClient{
 		httpClient: httpz.NewHttpClient(nil),
 		userName:   userName,
 	}
@@ -36,7 +36,7 @@ func NewXcClient(userName string) *XcClient {
 	return client
 }
 
-func (client *XcClient) IsSessionAlive() bool {
+func (client *XcodeClient) IsSessionAlive() bool {
 	if client.token.XAppleGSToken == "" || client.token.Adsid == "" {
 		return false
 	}
@@ -46,14 +46,14 @@ func (client *XcClient) IsSessionAlive() bool {
 	}
 	return false
 }
-func (client *XcClient) ViewTeams() *httpz.HttpResponse {
+func (client *XcodeClient) ViewTeams() *httpz.HttpResponse {
 	return client.postXcode("listTeams.action")
 }
 
 /*
 xcode plist request QH65B2
 */
-func (client *XcClient) postXcode(action string) *httpz.HttpResponse {
+func (client *XcodeClient) postXcode(action string) *httpz.HttpResponse {
 	headers := xcodeServiceHeader(client.token.XAppleGSToken, client.token.Adsid)
 	if client.xcodeSessionID != "" {
 		headers["DSESSIONID"] = client.xcodeSessionID
@@ -101,7 +101,7 @@ func xcodeServiceHeader(gstoken string, adsid string) map[string]string {
 	headers["X-Apple-I-Identity-Id"] = adsid
 	return headers
 }
-func (client *XcClient) DevApiV3() *itcapi.ItcApiV3 {
+func (client *XcodeClient) DevApiV3() *itcapi.ItcApiV3 {
 	header := map[string]string{
 		"User-Agent":       httpz.UserAgent_XCode_Simple,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",

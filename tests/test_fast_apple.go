@@ -5,22 +5,19 @@ import (
 	"gitee.com/kxapp/kxapp-common/errorz"
 	fastlang "github.com/appuploader/apple-service-v3/idmsaauth"
 	beans "github.com/appuploader/apple-service-v3/model"
-	//xcode "github.com/appuploader/apple-service-v3/xcodeauth"
-
-	//"github.com/appuploader/apple-service-v3/fastlang"
-	//"github.com/appuploader/apple-service-v3/xcode"
 	"time"
 )
 
 func main() {
 
-	account := "877028320@qq.com"
-	if fastlang.IsSessionAlive(account) {
+	account := "yanwen1688@gmail.com"
+	api := fastlang.NewDevClient(account)
+	if api.IsSessionAlive() {
 		fmt.Printf("session is alive for account %s\n", account)
 		onSuccess(account)
 		return
 	}
-	client := fastlang.NewAppleAuthClient()
+	client := fastlang.NewDevAuthClient()
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
@@ -35,12 +32,12 @@ func main() {
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
 		onSuccess(account)
 	} else if r.Status == 401 {
-		fmt.Printf("login failed")
+		fmt.Println("login failed", string(r.Body))
 	} else if r.Status == 409 {
-		fmt.Printf("fa2 required\n")
+		fmt.Println("fa2 required\n")
 		deviceResult := client.LoadTwoStepDevices()
 		if deviceResult.HasError() {
-			fmt.Printf("load device failed %+v %v\n", deviceResult.Error, deviceResult.Body)
+			fmt.Println("load device failed %+v %v\n", deviceResult.Error, deviceResult.Body)
 			return
 		}
 		tdStatus := deviceResult.Status
@@ -107,12 +104,13 @@ func main() {
 	time.Sleep(time.Minute * 5)
 }
 func onSuccess(account string) {
-	a := fastlang.NewDevApiV1(account)
-	t := fastlang.GetItcTeams(account)
+	a := fastlang.NewDevClient(account)
+	t := a.GetItcTeams()
 	//t := a.GetItcTeams()
 	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
-	a.TeamId = "CS2ADD9F7F"
-	dvs := a.ListDevices()
+	api := a.NewDevApiV1()
+	api.TeamId = "57W66QZCMN"
+	dvs := api.ListDevices()
 
 	fmt.Printf("list devices %+v %v\n", string(dvs.Body), dvs.Status)
 }

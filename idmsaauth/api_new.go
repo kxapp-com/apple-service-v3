@@ -5,15 +5,22 @@ import (
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/itcapi"
-
-	//"github.com/appuploader/apple-service-v3/beans"
 	"github.com/appuploader/apple-service-v3/storage"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func NewDevApiV1(userName string) *itcapi.ItcApiV3 {
+type DevClient struct {
+	httpClient *http.Client
+	userName   string
+}
+
+func NewDevClient(userName string) *DevClient {
+	userName = strings.ToLower(userName)
+	return &DevClient{userName: userName, httpClient: newHttpClientWithJar(userName)}
+}
+func (c *DevClient) NewDevApiV1() *itcapi.ItcApiV3 {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
@@ -21,30 +28,30 @@ func NewDevApiV1(userName string) *itcapi.ItcApiV3 {
 		"X-Csrf-Itc":       "itc",
 	}
 	api := &itcapi.ItcApiV3{
-		HttpClient:      NewHttpClientWithJar(userName),
+		HttpClient:      c.httpClient,
 		JsonHttpHeaders: itcHeader,
 		ServiceURL:      "https://developer.apple.com/services-account/v1/",
 		IsXcode:         false,
 	}
 	return api
 }
-func GetItcTeams(userName string) *httpz.HttpResponse {
+func (c *DevClient) GetItcTeams() *httpz.HttpResponse {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
 		"X-Requested-With": "XMLHttpRequest",
 		"X-Csrf-Itc":       "itc",
 	}
-	httpClient := NewHttpClientWithJar(userName)
+	//httpClient := newHttpClientWithJar(userName)
 	requestParams := `{"includeInMigrationTeams":1}`
 	request := httpz.Post("https://developer.apple.com/services-account/QH65B2/account/getTeams", itcHeader).ContentType(httpz.ContentType_JSON).
-		AddBody(requestParams).Request(httpClient)
+		AddBody(requestParams).Request(c.httpClient)
 	return request
 }
 
-func IsSessionAlive(userName string) bool {
-	client := NewHttpClientWithJar(userName)
-	response, err := client.Get(fmt.Sprintf("%s/v1/profile", BaseURLItc))
+func (c *DevClient) IsSessionAlive() bool {
+	//client := newHttpClientWithJar(userName)
+	response, err := c.httpClient.Get(fmt.Sprintf("%s/v1/profile", BaseURLItc))
 	if err != nil || response.StatusCode != http.StatusOK {
 		return false
 	}
@@ -55,7 +62,7 @@ func IsSessionAlive(userName string) bool {
 	return !strings.Contains(string(body), "session has expired")
 }
 
-func NewHttpClientWithJar(userName string) *http.Client {
+func newHttpClientWithJar(userName string) *http.Client {
 	userName = strings.ToLower(userName)
 	cookies, err := storage.ReadFile(storage.TokenPath(userName, storage.TokenTypeItc))
 	if err == nil && len(cookies) > 0 {

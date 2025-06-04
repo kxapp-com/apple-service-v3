@@ -15,7 +15,7 @@ import (
 	"github.com/appuploader/apple-service-v3/util"
 )
 
-type IdmsaClient struct {
+type DevAuthClient struct {
 	httpClient  *http.Client
 	baseHeaders map[string]string
 	scnt        string
@@ -29,7 +29,7 @@ type IdmsaClient struct {
 	username string
 }
 
-func NewAppleAuthClient() *IdmsaClient {
+func NewDevAuthClient() *DevAuthClient {
 	var DefaultHeaders = map[string]string{
 		HeaderUserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
 		HeaderXCsrfItc:        "itc",
@@ -39,18 +39,15 @@ func NewAppleAuthClient() *IdmsaClient {
 		HeaderAccept:          "application/json, text/javascript",
 		HeaderAcceptEncoding:  "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
 	}
-	return &IdmsaClient{
+	return &DevAuthClient{
 		baseHeaders: DefaultHeaders,
 	}
 }
 
-func (c *IdmsaClient) Login(userName string, password string) *httpz.HttpResponse {
+func (c *DevAuthClient) Login(userName string, password string) *httpz.HttpResponse {
 	userName = strings.ToLower(userName)
 	c.username = userName
-	if IsSessionAlive(userName) {
-		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
-	}
-	c.httpClient = NewHttpClientWithJar(userName)
+	c.httpClient = newHttpClientWithJar(userName)
 	srpClient := srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
 
 	initResponse := c.initializeSRP(userName, srpClient)
@@ -60,7 +57,7 @@ func (c *IdmsaClient) Login(userName string, password string) *httpz.HttpRespons
 	return c.completeSRP(userName, password, srpClient, initResponse)
 }
 
-func (c *IdmsaClient) initializeSRP(username string, srpClient *srp.SRPClient) *httpz.HttpResponse {
+func (c *DevAuthClient) initializeSRP(username string, srpClient *srp.SRPClient) *httpz.HttpResponse {
 	basedA := base64.StdEncoding.EncodeToString(srpClient.GetA())
 	initRequestBody := map[string]interface{}{
 		"a":           basedA,
@@ -78,7 +75,7 @@ func (c *IdmsaClient) initializeSRP(username string, srpClient *srp.SRPClient) *
 	return response
 }
 
-func (c *IdmsaClient) completeSRP(username, password string, srpClient *srp.SRPClient, initResponse *httpz.HttpResponse) *httpz.HttpResponse {
+func (c *DevAuthClient) completeSRP(username, password string, srpClient *srp.SRPClient, initResponse *httpz.HttpResponse) *httpz.HttpResponse {
 	var initResponseBody struct {
 		Iteration int    `json:"iteration"`
 		Salt      string `json:"salt"`
@@ -104,7 +101,7 @@ func (c *IdmsaClient) completeSRP(username, password string, srpClient *srp.SRPC
 	return c.postComplete(srpResult)
 }
 
-func (c *IdmsaClient) postComplete(srpInitResult map[string]any) *httpz.HttpResponse {
+func (c *DevAuthClient) postComplete(srpInitResult map[string]any) *httpz.HttpResponse {
 	requestURL := fmt.Sprintf("%s/auth/signin/complete?isRememberMeEnabled=true", BaseURLIdmsa)
 	bits, _ := strconv.Atoi(c.xAppleHCBits)
 	xAppleHC := util.MakeAppleHashCash(bits, c.xAppleHCChallenge)
@@ -131,14 +128,14 @@ func (c *IdmsaClient) postComplete(srpInitResult map[string]any) *httpz.HttpResp
 	return response
 }
 
-func (c *IdmsaClient) updateHeadersFromResponse(response *httpz.HttpResponse) {
+func (c *DevAuthClient) updateHeadersFromResponse(response *httpz.HttpResponse) {
 	c.scnt = response.Header.Get(HeaderScnt)
 	c.xAppleIDSessionId = response.Header.Get(HeaderXAppleIDSession)
 	c.xAppleAuthAttributes = response.Header.Get(HeaderXAppleAuthAttr)
 	c.xAppleIDAccountCountry = response.Header.Get(HeaderXAppleIDCountry)
 }
 
-func (c *IdmsaClient) getAuthAndDhHeaders() {
+func (c *DevAuthClient) getAuthAndDhHeaders() {
 	requestHeaders := map[string]string{
 		HeaderXCsrfItc: "itc",
 		HeaderAccept:   "*/*",
@@ -157,7 +154,7 @@ func (c *IdmsaClient) getAuthAndDhHeaders() {
 	}
 }
 
-func (c *IdmsaClient) LoadTwoStepDevices() *httpz.HttpResponse {
+func (c *DevAuthClient) LoadTwoStepDevices() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -173,7 +170,7 @@ func (c *IdmsaClient) LoadTwoStepDevices() *httpz.HttpResponse {
 	return response
 }
 
-func (c *IdmsaClient) RequestSMSVoiceCode(phoneId string, mode string) *httpz.HttpResponse {
+func (c *DevAuthClient) RequestSMSVoiceCode(phoneId string, mode string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -197,7 +194,7 @@ func (c *IdmsaClient) RequestSMSVoiceCode(phoneId string, mode string) *httpz.Ht
 	}
 }
 
-func (c *IdmsaClient) VerifySMSVoiceCode(phoneId string, code string, mode string) *httpz.HttpResponse {
+func (c *DevAuthClient) VerifySMSVoiceCode(phoneId string, code string, mode string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -231,7 +228,7 @@ func (c *IdmsaClient) VerifySMSVoiceCode(phoneId string, code string, mode strin
 	}
 }
 
-func (c *IdmsaClient) RequestDeviceCode() *httpz.HttpResponse {
+func (c *DevAuthClient) RequestDeviceCode() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -248,7 +245,7 @@ func (c *IdmsaClient) RequestDeviceCode() *httpz.HttpResponse {
 	return response
 }
 
-func (c *IdmsaClient) VerifyDeviceCode(code string) *httpz.HttpResponse {
+func (c *DevAuthClient) VerifyDeviceCode(code string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -272,7 +269,7 @@ func (c *IdmsaClient) VerifyDeviceCode(code string) *httpz.HttpResponse {
 }
 
 // 登录成功后trust设备，登录itc，存储cookie
-func (c *IdmsaClient) onLoginSuccess(response *httpz.HttpResponse) error {
+func (c *DevAuthClient) onLoginSuccess(response *httpz.HttpResponse) error {
 	c.Trust()
 	c.FetchItcCookies()
 	return c.saveCookiesToFile()
@@ -281,7 +278,7 @@ func (c *IdmsaClient) onLoginSuccess(response *httpz.HttpResponse) error {
 /*
 登录用于信任设备
 */
-func (c *IdmsaClient) Trust() *httpz.HttpResponse {
+func (c *DevAuthClient) Trust() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/2sv/trust"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -296,7 +293,7 @@ func (c *IdmsaClient) Trust() *httpz.HttpResponse {
 	c.xAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	return response
 }
-func (c *IdmsaClient) FetchItcCookies() *httpz.HttpResponse {
+func (c *DevAuthClient) FetchItcCookies() *httpz.HttpResponse {
 	var requestURL = "https://appstoreconnect.apple.com/olympus/v1/session"
 	requestHeaders := map[string]string{
 		"X-Csrf-Itc":      "itc",
@@ -313,7 +310,7 @@ func (c *IdmsaClient) FetchItcCookies() *httpz.HttpResponse {
 	c.xAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	return response
 }
-func (c *IdmsaClient) saveCookiesToFile() error {
+func (c *DevAuthClient) saveCookiesToFile() error {
 	j := c.httpClient.Jar.(*cookiejar.Jar)
 	d, e := j.ToJSON()
 	if e != nil {
@@ -322,14 +319,14 @@ func (c *IdmsaClient) saveCookiesToFile() error {
 	return storage.WriteFile(storage.TokenPath(c.username, storage.TokenTypeItc), d)
 }
 
-func (c *IdmsaClient) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
+func (c *DevAuthClient) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
 	if codeType == VerifyCodeMode_Device {
 		return c.VerifyDeviceCode(code)
 	} else {
 		return c.VerifySMSVoiceCode(phoneId, code, codeType)
 	}
 }
-func (c *IdmsaClient) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
+func (c *DevAuthClient) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
 	if codeType == VerifyCodeMode_Device {
 		return c.RequestDeviceCode()
 	} else {

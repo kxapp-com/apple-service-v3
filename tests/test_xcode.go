@@ -15,7 +15,7 @@ var account = "877028320@qq.com"
 
 func main() {
 
-	api := xcode.NewXcClient(account)
+	api := xcode.NewXcodeClient(account)
 	if api.IsSessionAlive() {
 		fmt.Println("session is alive")
 		t := api.ViewTeams()
@@ -24,7 +24,7 @@ func main() {
 	} else {
 		fmt.Println("session is not alive, try to login")
 	}
-	client := xcode.NewClient()
+	client := xcode.NewXcodeAuthClient()
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
@@ -120,9 +120,9 @@ func main() {
 	time.Sleep(time.Minute * 5)
 }
 
-func onSuccessXcode(client *xcode.Client, r *httpz.HttpResponse) {
+func onSuccessXcode(client *xcode.XcodeAuthClient, r *httpz.HttpResponse) {
 	fmt.Println("login success")
-	c := xcode.NewXcClient(account)
+	c := xcode.NewXcodeClient(account)
 	f := c.ViewTeams()
 	fmt.Println(f.Status, string(f.Body))
 	api := c.DevApiV3()
