@@ -2,6 +2,7 @@ package fastlang
 
 import (
 	"fmt"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/beans"
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"strings"
 )
 
+// ItcApiV3 represents the Apple iTunes Connect API v3 client
 type ItcApiV3 struct {
 	HttpClient      *http.Client
 	JsonHttpHeaders map[string]string
@@ -25,6 +27,8 @@ type ItcApiV3 struct {
 //	func (that *ItcApiV3) IsXCodeAPI() bool {
 //		return strings.Index(that.ServiceURL, "developerservices2.apple.com") > 0
 //	}
+
+// BeforeReturnAction handles response headers and session timeout
 func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
 	if response == nil || response.Header == nil {
 		return
@@ -41,10 +45,11 @@ func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
 		that.IsSessionTimeOut = true
 	}
 }
+
+// ListDevices retrieves a list of registered devices
 func (that *ItcApiV3) ListDevices() *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices"
-	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[AND][deviceClass]=APPLE_WATCH,IPAD,IPHONE,IPOD,APPLE_SILICON_MAC","teamId":"%s"}`
-	requestParams = fmt.Sprintf(requestParams, that.TeamId)
+	requestParams := fmt.Sprintf(`{"urlEncodedQueryParams":"limit=1000&sort=name&filter[AND][deviceClass]=APPLE_WATCH,IPAD,IPHONE,IPOD,APPLE_SILICON_MAC","teamId":"%s"}`, that.TeamId)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).SetHeader("X-HTTP-Method-Override", http.MethodGet).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
@@ -60,18 +65,21 @@ func (that *ItcApiV3) ListDevices() *httpz.HttpResponse {
 	//return devices, e
 }
 
+// AddDevicesValidate validates a device before adding
 func (that *ItcApiV3) AddDevicesValidate(udid string, deviceName string) *httpz.HttpResponse {
-	urlStr := that.ServiceURL + "devices"
-	return that.addAndValidateDevice(udid, deviceName, urlStr)
+	return that.addAndValidateDevice(udid, deviceName, that.ServiceURL+"devices")
 }
+
+// AddDevices adds a new device
 func (that *ItcApiV3) AddDevices(udid string, deviceName string) *httpz.HttpResponse {
-	urlStr := that.ServiceURL + "devices"
-	return that.addAndValidateDevice(udid, deviceName, urlStr)
+	return that.addAndValidateDevice(udid, deviceName, that.ServiceURL+"devices")
 }
+
+// addAndValidateDevice handles device addition and validation
 func (that *ItcApiV3) addAndValidateDevice(udid string, deviceName string, urlStr string) *httpz.HttpResponse {
-	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320’s Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
-	requestParamJS := `{"data":{"type":"devices","attributes":{"teamId":"%s","name":"%s","udid":"%s","platform":"%s"}}}` //MACOS
-	requestParamJS = fmt.Sprintf(requestParamJS, that.TeamId, deviceName, udid, "IOS")                                   //小写ios可能失败
+	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320's Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
+	requestParamJS := fmt.Sprintf(`{"data":{"type":"devices","attributes":{"teamId":"%s","name":"%s","udid":"%s","platform":"%s"}}}`,
+		that.TeamId, deviceName, udid, "IOS")
 	//fmt.Printf(requestParamJS)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction)
@@ -82,11 +90,13 @@ func (that *ItcApiV3) addAndValidateDevice(udid string, deviceName string, urlSt
 	//}
 	//return nil, e
 }
+
+// UpdateDeviceName updates the name of a device
 func (that *ItcApiV3) UpdateDeviceName(deviceIdID string, deviceName string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices/" + deviceIdID
-	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320’s Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
-	requestParamJS := `{"data":{"type":"devices","id":"%s","attributes":{"teamId":"%s","name":"%s"}}}` //MACOS
-	requestParamJS = fmt.Sprintf(requestParamJS, deviceIdID, that.TeamId, deviceName)
+	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320's Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
+	requestParamJS := fmt.Sprintf(`{"data":{"type":"devices","id":"%s","attributes":{"teamId":"%s","name":"%s"}}}`,
+		deviceIdID, that.TeamId, deviceName)
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
@@ -96,14 +106,16 @@ func (that *ItcApiV3) UpdateDeviceName(deviceIdID string, deviceName string) *ht
 	//}
 	//return nil, e
 }
+
+// UpdateDeviceStatus updates the status of a device
 func (that *ItcApiV3) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices/" + deviceIdID
 	status := "DISABLED"
 	if enable {
 		status = "ENABLED"
 	}
-	requestParamJS := `{"data":{"type":"devices","id":"%s","attributes":{"teamId":"%s","status":"%s"}}}` //MACOS
-	requestParamJS = fmt.Sprintf(requestParamJS, deviceIdID, that.TeamId, status)
+	requestParamJS := fmt.Sprintf(`{"data":{"type":"devices","id":"%s","attributes":{"teamId":"%s","status":"%s"}}}`,
+		deviceIdID, that.TeamId, status)
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction).Request(that.HttpClient)
 	return request
@@ -116,16 +128,18 @@ func (that *ItcApiV3) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// ListBundleID retrieves a list of bundle IDs
 func (that *ItcApiV3) ListBundleID() *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds"
-	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[platform]=IOS,MACOS,UNIVERSAL","teamId":"%s"}`
-	requestParams = fmt.Sprintf(requestParams, that.TeamId)
+	requestParams := fmt.Sprintf(`{"urlEncodedQueryParams":"limit=1000&sort=name&filter[platform]=IOS,MACOS,UNIVERSAL","teamId":"%s"}`, that.TeamId)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[[]BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
+
 func (that *ItcApiV3) GetBundleID(bundleIDId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bundleIDId
 	requestParams := `{"teamId":"%s"}`
@@ -135,6 +149,7 @@ func (that *ItcApiV3) GetBundleID(bundleIDId string) *httpz.HttpResponse {
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
+
 func (that *ItcApiV3) AddBundleID(bundleId string, name string, enablepush bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds"
 	isWild := strings.Index(bundleId, "*") >= 0
@@ -151,6 +166,7 @@ func (that *ItcApiV3) AddBundleID(bundleId string, name string, enablepush bool)
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusCreated)
 }
+
 func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bundleIDId
 	requestParams := `{"teamId":"%s"}`
@@ -161,6 +177,7 @@ func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	//_, e := ParseJsonResponseV1[map[string]any](request.Request(that.HttpClient), http.StatusNoContent)
 	//return e
 }
+
 func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	params := `{"data":{"type":"bundleIds","id":"%s","attributes":{"identifier":"%s","permissions":{"edit":true,"delete":true},"seedId":"%s","name":"%s","wildcard":%v,"teamId":"%s"},"relationships":{"bundleIdCapabilities":{"data":[]}}}}`
@@ -170,6 +187,7 @@ func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpRes
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
+
 func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "capabilities?filter[capabilityType]=capability,service"
 	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[bundleId]=%s&filter[platform]=IOS,MACOS,UNIVERSAL","teamId":"%s"}`
@@ -180,6 +198,7 @@ func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpRespon
 	//b, e := ParseJsonResponseV1[[]CapabilityBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
+
 func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	param := `{"data":{"attributes":{"identifier":"%s","seedId":"%s","teamId":"%s","name":"%s"},"relationships":{"bundleIdCapabilities":{"data":[{"type":"bundleIdCapabilities","attributes":{"enabled":%v,"settings":[]},"relationships":{"capability":{"data":{"type":"capabilities","id":"%s"}}}}]}},"type":"bundleIds"}}`
@@ -255,6 +274,7 @@ func (that *ItcApiV3) AddProfile(name string, profileType string, bundleIDid str
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusCreated)
 }
+
 func (that *ItcApiV3) RemoveProfile(profileId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "profiles/" + profileId
 	requestParams := `{"teamId":"%s"}`
@@ -286,6 +306,7 @@ func (that *ItcApiV3) ListCertifications(certificationType string) *httpz.HttpRe
 	//return ParseJsonResponseV1[[]CertificationBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
+
 func (that *ItcApiV3) GetCertification(certID string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "certificates/" + certID
 	//urlStr = urlStr + "?fields[certificates]=serialNumber,csrContent,certificateContent,name,certificateTypeId,certificateTypeName,displayName,platform,expirationDate,requesterFirstName,requesterLastName,requesterEmail,status,activated,ownerId,askKey,businessAccountIdentifier,~permissions.download,~permissions.revoke,~permissions.approve"
@@ -364,6 +385,7 @@ func (that *ItcApiV3) AddCertificationWithAppId(csrContent, certTypeName string,
 	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusCreated)
 	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
+
 func (that *ItcApiV3) AddCertificationService(csrContent, appIdId, certTypeId string, certTypeIDFieldName string) *httpz.HttpResponse {
 	//urlStr := "https://developer.apple.com/services-account/QH65B2/account/" + certTypePlatform + "/certificate/submitCertificateRequest.action"
 

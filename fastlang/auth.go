@@ -4,16 +4,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/srp"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/appuploader/apple-service-v3/util"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
+// IdmsaClient represents an Apple ID Management Service Authentication client
 type IdmsaClient struct {
 	httpClient  *http.Client
 	baseHeaders map[string]string
@@ -28,66 +30,87 @@ type IdmsaClient struct {
 	username string
 }
 
+// NewAppleAuthClient creates a new instance of IdmsaClient with default headers
 func NewAppleAuthClient() *IdmsaClient {
-	// 设置通用请求头
-	headers := map[string]string{
-		"User-Agent":         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-		"X-Csrf-Itc":         "itc",
-		"Content-Type":       "application/json",
-		"X-Requested-With":   "XMLHttpRequest",
-		"X-Apple-Widget-Key": "e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42",
-		"Accept":             "application/json, text/javascript",
-		"Accept-Encoding":    "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+	// Default Headers
+	var DefaultHeaders = map[string]string{
+		HeaderUserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+		HeaderXCsrfItc:        "itc",
+		HeaderContentType:     "application/json",
+		HeaderXRequestedWith:  "XMLHttpRequest",
+		HeaderXAppleWidgetKey: "e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42",
+		HeaderAccept:          "application/json, text/javascript",
+		HeaderAcceptEncoding:  "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
 	}
 	return &IdmsaClient{
-		baseHeaders: headers,
+		baseHeaders: DefaultHeaders,
 	}
 }
 
-//func (c *IdmsaClient)IsSessionAlive()bool  {
-//	r:=httpz.Get("https://developer.apple.com/services-account/QH65B2/v1/profile", nil).ContentType(httpz.ContentType_JSON).Request(c.httpClient)
-//	return !r.HasError() && r.Status == http.StatusOK
-//}
-/*
-登录，返回409，或者token
-*/
+// Login authenticates the user with Apple ID
 func (c *IdmsaClient) Login(username string, password string) *httpz.HttpResponse {
-	username = strings.ToLower(username) //srp挑战的时候发现其js代码里面有tolowcase
+	username = strings.ToLower(username)
 	c.username = username
+
 	if IsSessionAlive(username) {
 		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
 	}
-	c.httpClient = NewHttpClientWithJar(username)
 
+	c.httpClient = NewHttpClientWithJar(username)
 	srpClient := srp.NewSRPClient(srp.GetSRPParam(srp.SRP_N_LEN_2048), nil)
+
+	// Initialize SRP authentication
+	initResponse := c.initializeSRP(username, srpClient)
+	if initResponse.HasError() || initResponse.Status != http.StatusOK {
+		return initResponse
+	}
+
+	// Complete SRP authentication
+	return c.completeSRP(username, password, srpClient, initResponse)
+}
+
+// initializeSRP performs the initial SRP authentication step
+func (c *IdmsaClient) initializeSRP(username string, srpClient *srp.SRPClient) *httpz.HttpResponse {
 	basedA := base64.StdEncoding.EncodeToString(srpClient.GetA())
 	initRequestBody := map[string]interface{}{
 		"a":           basedA,
 		"accountName": username,
 		"protocols":   []string{"s2k", "s2k_fo"},
 	}
-	initResponse := c.postInit(initRequestBody)
-	if initResponse.HasError() {
-		return initResponse
+
+	requestURL := fmt.Sprintf("%s/auth/signin/init", BaseURLIdmsa)
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
+		AddHeaders(c.baseHeaders).
+		AddBody(initRequestBody).
+		Request(c.httpClient)
+
+	if !response.HasError() {
+		c.scnt = response.Header.Get(HeaderScnt)
 	}
-	if initResponse.Status != http.StatusOK {
-		return initResponse
-	}
-	type InitResponse struct {
+
+	return response
+}
+
+// completeSRP completes the SRP authentication process
+func (c *IdmsaClient) completeSRP(username, password string, srpClient *srp.SRPClient, initResponse *httpz.HttpResponse) *httpz.HttpResponse {
+	var initResponseBody struct {
 		Iteration int    `json:"iteration"`
 		Salt      string `json:"salt"`
 		Protocol  string `json:"protocol"`
 		B         string `json:"b"`
 		C         string `json:"c"`
 	}
-	var initResponseBody InitResponse
-	json.Unmarshal(initResponse.Body, &initResponseBody)
+
+	if err := json.Unmarshal(initResponse.Body, &initResponseBody); err != nil {
+		return &httpz.HttpResponse{Error: err}
+	}
+
 	saltData, _ := base64.StdEncoding.DecodeString(initResponseBody.Salt)
 	bData, _ := base64.StdEncoding.DecodeString(initResponseBody.B)
-	//hashedPassword := srp.PbkPassword(initResponseBody.Protocol, password, saltData, initResponseBody.Iteration)
 	hashedPassword := srp.PbkPassword(password, saltData, initResponseBody.Iteration, initResponseBody.Protocol != "s2k")
 
 	srpClient.ProcessClientChanllenge([]byte(username), hashedPassword, saltData, bData)
+
 	srpResult := map[string]any{
 		"accountName": username,
 		"rememberMe":  true,
@@ -95,80 +118,76 @@ func (c *IdmsaClient) Login(username string, password string) *httpz.HttpRespons
 		"c":           initResponseBody.C,
 		"m2":          base64.StdEncoding.EncodeToString(srpClient.M2),
 	}
-	c.getAuthAndDhHeaders() //获取auth和dh的头部信息
+
+	c.getAuthAndDhHeaders()
 	return c.postComplete(srpResult)
 }
 
-/*
-发送srp的初始化请求，获取init的返回值
-*/
-func (c *IdmsaClient) postInit(srpInitData map[string]any) *httpz.HttpResponse {
-	var requestURL = "https://idmsa.apple.com/appleauth/auth/signin/init"
-	requestHeaders := map[string]string{}
+// postComplete sends the final SRP authentication request
+func (c *IdmsaClient) postComplete(srpInitResult map[string]any) *httpz.HttpResponse {
+	requestURL := fmt.Sprintf("%s/auth/signin/complete?isRememberMeEnabled=true", BaseURLIdmsa)
+	bits, _ := strconv.Atoi(c.xAppleHCBits)
+	xAppleHC := util.MakeAppleHashCash(bits, c.xAppleHCChallenge)
+
+	requestHeaders := map[string]string{
+		HeaderScnt:           c.scnt,
+		HeaderXAppleAuthAttr: c.xAppleAuthAttributes,
+		HeaderXAppleHC:       xAppleHC,
+	}
+
 	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
-		AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).AddBody(srpInitData).Request(c.httpClient)
+		AddHeaders(c.baseHeaders).
+		AddHeaders(requestHeaders).
+		AddBody(srpInitResult).
+		Request(c.httpClient)
+
 	if response.HasError() {
 		return response
 	}
-	c.scnt = response.Header.Get("scnt")
+
+	c.updateHeadersFromResponse(response)
+
+	switch response.Status {
+	case http.StatusUnauthorized:
+		if strings.Contains(string(response.Body), fmt.Sprintf("%d", ErrorCodeSessionExpired)) {
+			return response
+		}
+	case http.StatusOK, http.StatusFound:
+		c.onLoginSuccess(response)
+	case http.StatusConflict:
+		// Handle two-factor authentication
+		return response
+	}
+
 	return response
 }
 
-/*
-*
-发送srp的完成请求，获取complete的返回值
-包含头X-Apple-ID-Account-Country和X-Apple-ID-Session-Id,scnt
-*/
-func (c *IdmsaClient) postComplete(srpInitResult map[string]any) *httpz.HttpResponse {
-	var requestURL = "https://idmsa.apple.com/appleauth/auth/signin/complete?isRememberMeEnabled=true"
-	bits, _ := strconv.Atoi(c.xAppleHCBits)
-	xAppleHC := util.MakeAppleHashCash(bits, c.xAppleHCChallenge)
+// updateHeadersFromResponse updates client headers from response headers
+func (c *IdmsaClient) updateHeadersFromResponse(response *httpz.HttpResponse) {
+	c.scnt = response.Header.Get(HeaderScnt)
+	c.xAppleIDSessionId = response.Header.Get(HeaderXAppleIDSession)
+	c.xAppleAuthAttributes = response.Header.Get(HeaderXAppleAuthAttr)
+	c.xAppleIDAccountCountry = response.Header.Get(HeaderXAppleIDCountry)
+}
+
+// getAuthAndDhHeaders retrieves authentication and DH headers
+func (c *IdmsaClient) getAuthAndDhHeaders() {
 	requestHeaders := map[string]string{
-		"scnt":                    c.scnt,
-		"X-Apple-Auth-Attributes": c.xAppleAuthAttributes,
-		"X-Apple-HC":              xAppleHC,
+		HeaderXCsrfItc: "itc",
+		HeaderAccept:   "*/*",
 	}
 
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, requestURL).
-		AddHeaders(c.baseHeaders).AddHeaders(requestHeaders).AddBody(srpInitResult).Request(c.httpClient)
-	if response.HasError() {
-		return response
+	requestURL := fmt.Sprintf("%s/auth/signin?widgetKey=%s", BaseURLIdmsa, c.baseHeaders[HeaderXAppleWidgetKey])
+	response := httpz.NewHttpRequestBuilder(http.MethodGet, requestURL).
+		AddHeaders(requestHeaders).
+		Request(c.httpClient)
+
+	if !response.HasError() {
+		c.scnt = response.Header.Get(HeaderScnt)
+		c.xAppleAuthAttributes = response.Header.Get(HeaderXAppleAuthAttr)
+		c.xAppleHCBits = response.Header.Get(HeaderXAppleHCBits)
+		c.xAppleHCChallenge = response.Header.Get(HeaderXAppleHCChallenge)
 	}
-	c.scnt = response.Header.Get("scnt")
-	c.xAppleIDSessionId = response.Header.Get(_HEADER_SESSION_ID_KEY)
-	c.xAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
-	c.xAppleIDAccountCountry = response.Header.Get("X-Apple-ID-Account-Country")
-	//trusTw: = response.Header.Get("X-Apple-TwoSV-Trust-Eligible")
-	if response.Status == http.StatusUnauthorized && strings.Contains(string(response.Body), "-20101") {
-		return response
-	} else if response.Status == http.StatusOK || response.Status == http.StatusFound {
-		//c.xAppleIDSessionId = response.Header.Get(_HEADER_SESSION_ID_KEY)
-		//c.Myacinfo = response.CookieValue("myacinfo")
-		//c.dslang = response.CookieValue("dslang")
-		c.onLoginSuccess(response)
-		return response
-	} else if response.Status == http.StatusConflict { //二次校验，返回设备列表
-		return response
-		//var authType map[string]string
-		//e2 := json.Unmarshal(response.Body, &authType)
-		//if e2 != nil {
-		//	return response
-		//}
-		//if authType["authType"] == "hsa" {
-		//	return response
-		//}
-		//return response, nil
-	} else {
-		return response
-	}
-}
-func (c *IdmsaClient) getAuthAndDhHeaders() {
-	requestHeaders := map[string]string{"X-Csrf-Itc": "itc", "Accept": "*/*"}
-	response := httpz.NewHttpRequestBuilder(http.MethodGet, "https://idmsa.apple.com/appleauth/auth/signin?widgetKey=e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42").AddHeaders(requestHeaders).Request(c.httpClient)
-	c.scnt = response.Header.Get("scnt")
-	c.xAppleAuthAttributes = response.Header.Get("X-Apple-Auth-Attributes")
-	c.xAppleHCBits = response.Header.Get("X-Apple-HC-Bits")
-	c.xAppleHCChallenge = response.Header.Get("X-Apple-HC-Challenge")
 }
 
 /*
