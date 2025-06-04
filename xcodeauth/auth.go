@@ -31,14 +31,14 @@ func NewXcodeAuthClient() *XcodeAuthClient {
 func (client *XcodeAuthClient) Login(userName string, password string) *httpz.HttpResponse {
 	client.userName = userName
 	client.password = password
-	return client.CheckPassword()
+	return client.checkPassword()
 }
 
 /*
 *
 返回二次校验的设备列表，或者得到xctoken后返回登录成功消息，或者返回失败的提示消息
 */
-func (client *XcodeAuthClient) CheckPassword() *httpz.HttpResponse {
+func (client *XcodeAuthClient) checkPassword() *httpz.HttpResponse {
 	anissete, ee := appuploader.GetAnisseteFromAu(client.userName)
 	if ee != nil {
 		return &httpz.HttpResponse{Error: ee, Status: 500}
@@ -94,7 +94,7 @@ func (client *XcodeAuthClient) VerifyCode(codeType string, code string, phoneId 
 		r = client.verifySMSVoiceCode(phoneId, code, codeType)
 	}
 	if r.Status == http.StatusOK {
-		return client.CheckPassword()
+		return client.checkPassword()
 	}
 	return r
 }

@@ -170,7 +170,7 @@ func (c *DevAuthClient) LoadTwoStepDevices() *httpz.HttpResponse {
 	return response
 }
 
-func (c *DevAuthClient) RequestSMSVoiceCode(phoneId string, mode string) *httpz.HttpResponse {
+func (c *DevAuthClient) requestSMSVoiceCode(phoneId string, mode string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -194,7 +194,7 @@ func (c *DevAuthClient) RequestSMSVoiceCode(phoneId string, mode string) *httpz.
 	}
 }
 
-func (c *DevAuthClient) VerifySMSVoiceCode(phoneId string, code string, mode string) *httpz.HttpResponse {
+func (c *DevAuthClient) verifySMSVoiceCode(phoneId string, code string, mode string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/phone/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -228,7 +228,7 @@ func (c *DevAuthClient) VerifySMSVoiceCode(phoneId string, code string, mode str
 	}
 }
 
-func (c *DevAuthClient) RequestDeviceCode() *httpz.HttpResponse {
+func (c *DevAuthClient) requestDeviceCode() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -245,7 +245,7 @@ func (c *DevAuthClient) RequestDeviceCode() *httpz.HttpResponse {
 	return response
 }
 
-func (c *DevAuthClient) VerifyDeviceCode(code string) *httpz.HttpResponse {
+func (c *DevAuthClient) verifyDeviceCode(code string) *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -270,15 +270,15 @@ func (c *DevAuthClient) VerifyDeviceCode(code string) *httpz.HttpResponse {
 
 // 登录成功后trust设备，登录itc，存储cookie
 func (c *DevAuthClient) onLoginSuccess(response *httpz.HttpResponse) error {
-	c.Trust()
-	c.FetchItcCookies()
+	c.trust()
+	c.fetchItcCookies()
 	return c.saveCookiesToFile()
 }
 
 /*
 登录用于信任设备
 */
-func (c *DevAuthClient) Trust() *httpz.HttpResponse {
+func (c *DevAuthClient) trust() *httpz.HttpResponse {
 	var requestURL = "https://idmsa.apple.com/appleauth/auth/2sv/trust"
 	requestHeaders := map[string]string{
 		"scnt":                  c.scnt,
@@ -293,7 +293,7 @@ func (c *DevAuthClient) Trust() *httpz.HttpResponse {
 	c.xAppleAuthAttributes = response.Header.Get(_X_Apple_Auth_Attributes_KEY)
 	return response
 }
-func (c *DevAuthClient) FetchItcCookies() *httpz.HttpResponse {
+func (c *DevAuthClient) fetchItcCookies() *httpz.HttpResponse {
 	var requestURL = "https://appstoreconnect.apple.com/olympus/v1/session"
 	requestHeaders := map[string]string{
 		"X-Csrf-Itc":      "itc",
@@ -321,16 +321,16 @@ func (c *DevAuthClient) saveCookiesToFile() error {
 
 func (c *DevAuthClient) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
 	if codeType == VerifyCodeMode_Device {
-		return c.VerifyDeviceCode(code)
+		return c.verifyDeviceCode(code)
 	} else {
-		return c.VerifySMSVoiceCode(phoneId, code, codeType)
+		return c.verifySMSVoiceCode(phoneId, code, codeType)
 	}
 }
 func (c *DevAuthClient) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
 	if codeType == VerifyCodeMode_Device {
-		return c.RequestDeviceCode()
+		return c.requestDeviceCode()
 	} else {
-		return c.RequestSMSVoiceCode(phoneId, codeType)
+		return c.requestSMSVoiceCode(phoneId, codeType)
 	}
 }
 
