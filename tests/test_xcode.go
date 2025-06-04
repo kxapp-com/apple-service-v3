@@ -18,7 +18,7 @@ func main() {
 	api := xcode.NewXcodeClient(account)
 	if api.IsSessionAlive() {
 		fmt.Println("session is alive")
-		t := api.ViewTeams()
+		t := api.GetTeams()
 		fmt.Println(t.Status, string(t.Body))
 		return
 	} else {
@@ -123,13 +123,13 @@ func main() {
 func onSuccessXcode(client *xcode.XcodeAuthClient, r *httpz.HttpResponse) {
 	fmt.Println("login success")
 	c := xcode.NewXcodeClient(account)
-	f := c.ViewTeams()
+	f := c.GetTeams()
 	fmt.Println(f.Status, string(f.Body))
-	api := c.DevApiV3()
+	api := c.GetApiV3()
 	api.TeamId = "CS2ADD9F7F"
 	t := api.ListDevices()
 	fmt.Println(t.Status, string(t.Body))
-	//t := client.ViewTeams()
+	//t := client.GetTeams()
 	//fmt.Println(t.Status, string(t.Body))
 	//apiClient := xcode.NewDevApiV1(client)
 	//apiClient.TeamId = "CS2ADD9F7F"

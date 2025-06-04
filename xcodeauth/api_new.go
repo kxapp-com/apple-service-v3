@@ -46,7 +46,7 @@ func (client *XcodeClient) IsSessionAlive() bool {
 	}
 	return false
 }
-func (client *XcodeClient) ViewTeams() *httpz.HttpResponse {
+func (client *XcodeClient) GetTeams() *httpz.HttpResponse {
 	return client.postXcode("listTeams.action")
 }
 

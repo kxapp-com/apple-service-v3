@@ -33,7 +33,7 @@ func (c *DevClient) IsSessionAlive() bool {
 	return !strings.Contains(string(body), "session has expired")
 }
 
-func (c *DevClient) ViewTeams() *httpz.HttpResponse {
+func (c *DevClient) GetTeams() *httpz.HttpResponse {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",

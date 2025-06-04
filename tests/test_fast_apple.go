@@ -105,10 +105,10 @@ func main() {
 }
 func onSuccess(account string) {
 	a := fastlang.NewDevClient(account)
-	t := a.GetItcTeams()
+	t := a.GetTeams()
 	//t := a.GetItcTeams()
 	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
-	api := a.NewDevApiV1()
+	api := a.GetApiV3()
 	api.TeamId = "57W66QZCMN"
 	dvs := api.ListDevices()
 
