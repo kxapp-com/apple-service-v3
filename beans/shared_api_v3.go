@@ -1,12 +1,9 @@
-package fastlang
+package beans
 
 import (
 	"fmt"
-
 	"gitee.com/kxapp/kxapp-common/httpz"
-	"github.com/appuploader/apple-service-v3/beans"
 	"github.com/google/uuid"
-
 	"net/http"
 	"strings"
 )
@@ -18,21 +15,35 @@ type ItcApiV3 struct {
 	//https://developerservices2.apple.com/services/v1/
 	//https://developer.apple.com/services-account/v1/
 	ServiceURL string
-	userName   string
+	IsXcode    bool
 }
 
 // BeforeReturnAction handles response headers and session timeout
 func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
-	if response == nil || response.Header == nil {
-		return
+	if !that.IsXcode {
+		if response == nil || response.Header == nil {
+			return
+		}
+		csrf := response.Header.Get("csrf")
+		csrf_ts := response.Header.Get("csrf_ts")
+		if csrf != "" {
+			that.JsonHttpHeaders["csrf"] = csrf
+		}
+		if csrf_ts != "" {
+			that.JsonHttpHeaders["csrf_ts"] = csrf_ts
+		}
 	}
-	csrf := response.Header.Get("csrf")
-	csrf_ts := response.Header.Get("csrf_ts")
-	if csrf != "" {
-		that.JsonHttpHeaders["csrf"] = csrf
-	}
-	if csrf_ts != "" {
-		that.JsonHttpHeaders["csrf_ts"] = csrf_ts
+}
+func (that *ItcApiV3) ListBundleIDByCertType(certTypeId string, platform string) *httpz.HttpResponse {
+	if that.IsXcode {
+		return that.ListBundleID()
+	} else {
+		urlStr := "https://developer.apple.com/services-account/QH65B2/account/%s/identifiers/listAvailableIdentifiersByCertType?pageSize=500&pageNumber=1&certificateTypeDisplayId=%s&teamId=%s"
+		requestParams := ``
+		urlStr = fmt.Sprintf(urlStr, platform, certTypeId, that.TeamId)
+		request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_Form_URL).
+			AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).Accept(httpz.AcceptType_JSON) //.SetHeader("X-HTTP-Method-Override", http.MethodGet)
+		return request.Request(that.HttpClient)
 	}
 }
 
@@ -133,7 +144,7 @@ func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	return request.Request(that.HttpClient)
 }
 
-func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleIDDes(bean *BundleIDBean) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	params := `{"data":{"type":"bundleIds","id":"%s","attributes":{"identifier":"%s","permissions":{"edit":true,"delete":true},"seedId":"%s","name":"%s","wildcard":%v,"teamId":"%s"},"relationships":{"bundleIdCapabilities":{"data":[]}}}}`
 	params = fmt.Sprintf(params, bean.Id, bean.Attributes.Identifier, that.TeamId, bean.Attributes.Name, bean.Attributes.Wildcard, that.TeamId)
@@ -151,21 +162,12 @@ func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpRespon
 	return request.Request(that.HttpClient)
 }
 
-func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleCapabilities(bean BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	param := `{"data":{"attributes":{"identifier":"%s","seedId":"%s","teamId":"%s","name":"%s"},"relationships":{"bundleIdCapabilities":{"data":[{"type":"bundleIdCapabilities","attributes":{"enabled":%v,"settings":[]},"relationships":{"capability":{"data":{"type":"capabilities","id":"%s"}}}}]}},"type":"bundleIds"}}`
 	param = fmt.Sprintf(param, bean.Attributes.Identifier, bean.Attributes.SeedId, that.TeamId, bean.Attributes.Name, enable, capacityId)
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(param).BeforeReturn(that.BeforeReturnAction)
-	return request.Request(that.HttpClient)
-}
-
-func (that *ItcApiV3) ListBundleIDByCertType(certTypeId string, platform string) *httpz.HttpResponse {
-	urlStr := "https://developer.apple.com/services-account/QH65B2/account/%s/identifiers/listAvailableIdentifiersByCertType?pageSize=500&pageNumber=1&certificateTypeDisplayId=%s&teamId=%s"
-	requestParams := ``
-	urlStr = fmt.Sprintf(urlStr, platform, certTypeId, that.TeamId)
-	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_Form_URL).
-		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).Accept(httpz.AcceptType_JSON) //.SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
 }
 

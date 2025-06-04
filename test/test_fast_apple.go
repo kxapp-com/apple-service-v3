@@ -106,4 +106,8 @@ func onSuccess(account string) {
 	a := fastlang.NewDevApiV1(account)
 	t := a.GetItcTeams()
 	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
+	a.TeamId = "CS2ADD9F7F"
+	dvs := a.ListDevices()
+
+	fmt.Printf("list devices %+v %v\n", string(dvs.Body), dvs.Status)
 }
