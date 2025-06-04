@@ -3,6 +3,7 @@ package beans
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	beans "github.com/appuploader/apple-service-v3/model"
 	"github.com/google/uuid"
 	"net/http"
 	"strings"
@@ -144,7 +145,7 @@ func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	return request.Request(that.HttpClient)
 }
 
-func (that *ItcApiV3) UpdateBundleIDDes(bean *BundleIDBean) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	params := `{"data":{"type":"bundleIds","id":"%s","attributes":{"identifier":"%s","permissions":{"edit":true,"delete":true},"seedId":"%s","name":"%s","wildcard":%v,"teamId":"%s"},"relationships":{"bundleIdCapabilities":{"data":[]}}}}`
 	params = fmt.Sprintf(params, bean.Id, bean.Attributes.Identifier, that.TeamId, bean.Attributes.Name, bean.Attributes.Wildcard, that.TeamId)
@@ -162,7 +163,7 @@ func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpRespon
 	return request.Request(that.HttpClient)
 }
 
-func (that *ItcApiV3) UpdateBundleCapabilities(bean BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	param := `{"data":{"attributes":{"identifier":"%s","seedId":"%s","teamId":"%s","name":"%s"},"relationships":{"bundleIdCapabilities":{"data":[{"type":"bundleIdCapabilities","attributes":{"enabled":%v,"settings":[]},"relationships":{"capability":{"data":{"type":"capabilities","id":"%s"}}}}]}},"type":"bundleIds"}}`
 	param = fmt.Sprintf(param, bean.Attributes.Identifier, bean.Attributes.SeedId, that.TeamId, bean.Attributes.Name, enable, capacityId)
