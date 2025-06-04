@@ -1,55 +1,47 @@
-package xcode
+package fastlang
 
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"github.com/appuploader/apple-service-v3/beans"
 	"github.com/google/uuid"
+
 	"net/http"
 	"strings"
-	"time"
 )
 
-type DevApiV1 struct {
+type ItcApiV3 struct {
 	HttpClient      *http.Client
 	JsonHttpHeaders map[string]string
 	TeamId          string
 	//https://developerservices2.apple.com/services/v1/
 	//https://developer.apple.com/services-account/v1/
-	ServiceURL          string
-	CachedHeaderHandler func(response *http.Response)
-	IsSessionTimeOut    bool
+	ServiceURL string
+	//CachedHeaderHandler func(response *http.Response)
+	IsSessionTimeOut bool
+	userName         string
 }
 
-func NewDevApiV1(client *Client) *DevApiV1 {
-	headers := xcodeApiV1Header(client.Token.XAppleGSToken, client.Token.Adsid, client.xcodeSessionID)
-	headers = AddAnisseteHeaders(client.anisseteData, headers)
-	return &DevApiV1{
-		HttpClient:      client.httpClient,
-		ServiceURL:      "https://developerservices2.apple.com/services/v1/",
-		JsonHttpHeaders: headers,
-	}
-}
-
-//	func (that *DevApiV1) IsXCodeAPI() bool {
+//	func (that *ItcApiV3) IsXCodeAPI() bool {
 //		return strings.Index(that.ServiceURL, "developerservices2.apple.com") > 0
 //	}
-func (that *DevApiV1) BeforeReturnAction(response *http.Response) {
-	//if response == nil || response.Header == nil {
-	//	return
-	//}
-	//csrf := response.Header.Get("csrf")
-	//csrf_ts := response.Header.Get("csrf_ts")
-	//if csrf != "" {
-	//	that.JsonHttpHeaders["csrf"] = csrf
-	//}
-	//if csrf_ts != "" {
-	//	that.JsonHttpHeaders["csrf_ts"] = csrf_ts
-	//}
+func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
+	if response == nil || response.Header == nil {
+		return
+	}
+	csrf := response.Header.Get("csrf")
+	csrf_ts := response.Header.Get("csrf_ts")
+	if csrf != "" {
+		that.JsonHttpHeaders["csrf"] = csrf
+	}
+	if csrf_ts != "" {
+		that.JsonHttpHeaders["csrf_ts"] = csrf_ts
+	}
 	if response.StatusCode >= http.StatusBadRequest {
 		that.IsSessionTimeOut = true
 	}
 }
-func (that *DevApiV1) ListDevices() *httpz.HttpResponse {
+func (that *ItcApiV3) ListDevices() *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices"
 	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[AND][deviceClass]=APPLE_WATCH,IPAD,IPHONE,IPOD,APPLE_SILICON_MAC","teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -68,15 +60,15 @@ func (that *DevApiV1) ListDevices() *httpz.HttpResponse {
 	//return devices, e
 }
 
-func (that *DevApiV1) AddDevicesValidate(udid string, deviceName string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddDevicesValidate(udid string, deviceName string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices"
 	return that.addAndValidateDevice(udid, deviceName, urlStr)
 }
-func (that *DevApiV1) AddDevices(udid string, deviceName string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddDevices(udid string, deviceName string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices"
 	return that.addAndValidateDevice(udid, deviceName, urlStr)
 }
-func (that *DevApiV1) addAndValidateDevice(udid string, deviceName string, urlStr string) *httpz.HttpResponse {
+func (that *ItcApiV3) addAndValidateDevice(udid string, deviceName string, urlStr string) *httpz.HttpResponse {
 	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320’s Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
 	requestParamJS := `{"data":{"type":"devices","attributes":{"teamId":"%s","name":"%s","udid":"%s","platform":"%s"}}}` //MACOS
 	requestParamJS = fmt.Sprintf(requestParamJS, that.TeamId, deviceName, udid, "IOS")                                   //小写ios可能失败
@@ -90,7 +82,7 @@ func (that *DevApiV1) addAndValidateDevice(udid string, deviceName string, urlSt
 	//}
 	//return nil, e
 }
-func (that *DevApiV1) UpdateDeviceName(deviceIdID string, deviceName string) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateDeviceName(deviceIdID string, deviceName string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices/" + deviceIdID
 	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320’s Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
 	requestParamJS := `{"data":{"type":"devices","id":"%s","attributes":{"teamId":"%s","name":"%s"}}}` //MACOS
@@ -104,7 +96,7 @@ func (that *DevApiV1) UpdateDeviceName(deviceIdID string, deviceName string) *ht
 	//}
 	//return nil, e
 }
-func (that *DevApiV1) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices/" + deviceIdID
 	status := "DISABLED"
 	if enable {
@@ -124,7 +116,7 @@ func (that *DevApiV1) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------
-func (that *DevApiV1) ListBundleID() *httpz.HttpResponse {
+func (that *ItcApiV3) ListBundleID() *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds"
 	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[platform]=IOS,MACOS,UNIVERSAL","teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -134,7 +126,7 @@ func (that *DevApiV1) ListBundleID() *httpz.HttpResponse {
 	//return ParseJsonResponseV1[[]BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
-func (that *DevApiV1) GetBundleID(bundleIDId string) *httpz.HttpResponse {
+func (that *ItcApiV3) GetBundleID(bundleIDId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bundleIDId
 	requestParams := `{"teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -143,7 +135,7 @@ func (that *DevApiV1) GetBundleID(bundleIDId string) *httpz.HttpResponse {
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
-func (that *DevApiV1) AddBundleID(bundleId string, name string, enablepush bool) *httpz.HttpResponse {
+func (that *ItcApiV3) AddBundleID(bundleId string, name string, enablepush bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds"
 	isWild := strings.Index(bundleId, "*") >= 0
 	isWild = true
@@ -159,7 +151,7 @@ func (that *DevApiV1) AddBundleID(bundleId string, name string, enablepush bool)
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusCreated)
 }
-func (that *DevApiV1) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
+func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bundleIDId
 	requestParams := `{"teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -169,7 +161,7 @@ func (that *DevApiV1) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	//_, e := ParseJsonResponseV1[map[string]any](request.Request(that.HttpClient), http.StatusNoContent)
 	//return e
 }
-func (that *DevApiV1) UpdateBundleIDDes(bean *BundleIDBean) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	params := `{"data":{"type":"bundleIds","id":"%s","attributes":{"identifier":"%s","permissions":{"edit":true,"delete":true},"seedId":"%s","name":"%s","wildcard":%v,"teamId":"%s"},"relationships":{"bundleIdCapabilities":{"data":[]}}}}`
 	params = fmt.Sprintf(params, bean.Id, bean.Attributes.Identifier, that.TeamId, bean.Attributes.Name, bean.Attributes.Wildcard, that.TeamId)
@@ -178,7 +170,7 @@ func (that *DevApiV1) UpdateBundleIDDes(bean *BundleIDBean) *httpz.HttpResponse 
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
-func (that *DevApiV1) GetBundleCapabilities(bundleIdID string) *httpz.HttpResponse {
+func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "capabilities?filter[capabilityType]=capability,service"
 	requestParams := `{"urlEncodedQueryParams":"limit=1000&sort=name&filter[bundleId]=%s&filter[platform]=IOS,MACOS,UNIVERSAL","teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, bundleIdID, that.TeamId)
@@ -188,7 +180,7 @@ func (that *DevApiV1) GetBundleCapabilities(bundleIdID string) *httpz.HttpRespon
 	//b, e := ParseJsonResponseV1[[]CapabilityBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
-func (that *DevApiV1) UpdateBundleCapabilities(bean BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
+func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "bundleIds/" + bean.Id
 	param := `{"data":{"attributes":{"identifier":"%s","seedId":"%s","teamId":"%s","name":"%s"},"relationships":{"bundleIdCapabilities":{"data":[{"type":"bundleIdCapabilities","attributes":{"enabled":%v,"settings":[]},"relationships":{"capability":{"data":{"type":"capabilities","id":"%s"}}}}]}},"type":"bundleIds"}}`
 	param = fmt.Sprintf(param, bean.Attributes.Identifier, bean.Attributes.SeedId, that.TeamId, bean.Attributes.Name, enable, capacityId)
@@ -198,30 +190,14 @@ func (that *DevApiV1) UpdateBundleCapabilities(bean BundleIDBean, capacityId str
 	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
-func (that *DevApiV1) ListBundleIDByCertType(certTypeId string, platform string) *httpz.HttpResponse {
-	return that.ListBundleID()
-	/*	if that.IsXCodeAPI() {
-			var result []map[string]any
-			bundles, e := that.ListBundleID()
-			if e != nil {
-				return nil, e
-			}
-			for _, bean := range *bundles {
-				if bean.Attributes.Platform == platform {
-					bb := map[string]any{"displayId": bean.Id, "identifier": bean.Attributes.Identifier, "prefix": bean.Attributes.SeedId}
-					result = append(result, bb)
-				}
-			}
-			return &result, nil
-		} else {
-			urlStr := "https://developer.apple.com/services-account/QH65B2/account/%s/identifiers/listAvailableIdentifiersByCertType?pageSize=500&pageNumber=1&certificateTypeDisplayId=%s&teamId=%s"
-			requestParams := ``
-			urlStr = fmt.Sprintf(urlStr, platform, certTypeId, that.TeamId)
-			request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_Form_URL).
-				AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).Accept(httpz.AcceptType_JSON) //.SetHeader("X-HTTP-Method-Override", http.MethodGet)
-			return request.Request(that.HttpClient)
-			//return ParseJsonQH65B2[[]map[string]any](request.Request(that.HttpClient), "identifierList", http.StatusOK)
-		}*/
+func (that *ItcApiV3) ListBundleIDByCertType(certTypeId string, platform string) *httpz.HttpResponse {
+	urlStr := "https://developer.apple.com/services-account/QH65B2/account/%s/identifiers/listAvailableIdentifiersByCertType?pageSize=500&pageNumber=1&certificateTypeDisplayId=%s&teamId=%s"
+	requestParams := ``
+	urlStr = fmt.Sprintf(urlStr, platform, certTypeId, that.TeamId)
+	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_Form_URL).
+		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).Accept(httpz.AcceptType_JSON) //.SetHeader("X-HTTP-Method-Override", http.MethodGet)
+	return request.Request(that.HttpClient)
+	//return ParseJsonQH65B2[[]map[string]any](request.Request(that.HttpClient), "identifierList", http.StatusOK)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,7 +205,7 @@ func (that *DevApiV1) ListBundleIDByCertType(certTypeId string, platform string)
 *
 type设置空的时候则获取全部profile  PROFILE_TYPE_IOS_APP_DEVELOPMENT 之类的类型
 */
-func (that *DevApiV1) ListProfile(profileType string) *httpz.HttpResponse {
+func (that *ItcApiV3) ListProfile(profileType string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "profiles"
 	fields := "&fields[profiles]=-profileContent"
 	filter := ""
@@ -246,7 +222,7 @@ func (that *DevApiV1) ListProfile(profileType string) *httpz.HttpResponse {
 }
 
 // ddd, e := client.GetProfile("2RA8BUG9LN")
-func (that *DevApiV1) GetProfile(profileId string) *httpz.HttpResponse {
+func (that *ItcApiV3) GetProfile(profileId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "profiles/" + profileId + "?include=bundleId,certificates,bundleId.bundleIdCapabilities,bundleId.bundleIdCapabilities.macBundleId"
 	requestParams := `{"teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -256,7 +232,7 @@ func (that *DevApiV1) GetProfile(profileId string) *httpz.HttpResponse {
 	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
-func (that *DevApiV1) AddProfile(name string, profileType string, bundleIDid string, certIDs []string, deviceIDs []string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddProfile(name string, profileType string, bundleIDid string, certIDs []string, deviceIDs []string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "profiles"
 	requestParams := `{"data":{"type":"profiles","attributes":{"name":"%s","profileType":"%s","teamId":"%s"},
 "relationships":{"bundleId":{"data":{"type":"bundleIds","id":"%s"}},"certificates":{"data":[%s]},"devices":{"data":[%s]}}}}`
@@ -279,7 +255,7 @@ func (that *DevApiV1) AddProfile(name string, profileType string, bundleIDid str
 	return request.Request(that.HttpClient)
 	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusCreated)
 }
-func (that *DevApiV1) RemoveProfile(profileId string) *httpz.HttpResponse {
+func (that *ItcApiV3) RemoveProfile(profileId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "profiles/" + profileId
 	requestParams := `{"teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -291,7 +267,7 @@ func (that *DevApiV1) RemoveProfile(profileId string) *httpz.HttpResponse {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-func (that *DevApiV1) ListCertifications(certificationType string) *httpz.HttpResponse {
+func (that *ItcApiV3) ListCertifications(certificationType string) *httpz.HttpResponse {
 	//fields := "&fields[certificates]=serialNumber,csrContent,certificateContent,name,certificateTypeId,certificateTypeName,displayName,platform,expirationDate,requesterFirstName,requesterLastName,requesterEmail,status,activated,ownerId,askKey,businessAccountIdentifier,~permissions.download,~permissions.revoke,~permissions.approve"
 
 	fields := "&fields[certificates]=-certificateContent"
@@ -310,7 +286,7 @@ func (that *DevApiV1) ListCertifications(certificationType string) *httpz.HttpRe
 	//return ParseJsonResponseV1[[]CertificationBean](request.Request(that.HttpClient), http.StatusOK)
 	//return *b, e
 }
-func (that *DevApiV1) GetCertification(certID string) *httpz.HttpResponse {
+func (that *ItcApiV3) GetCertification(certID string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "certificates/" + certID
 	//urlStr = urlStr + "?fields[certificates]=serialNumber,csrContent,certificateContent,name,certificateTypeId,certificateTypeName,displayName,platform,expirationDate,requesterFirstName,requesterLastName,requesterEmail,status,activated,ownerId,askKey,businessAccountIdentifier,~permissions.download,~permissions.revoke,~permissions.approve"
 	requestParams := `{"teamId":"%s"}`
@@ -321,7 +297,7 @@ func (that *DevApiV1) GetCertification(certID string) *httpz.HttpResponse {
 	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
-func (that *DevApiV1) RemoveCertification(certId string) *httpz.HttpResponse {
+func (that *ItcApiV3) RemoveCertification(certId string) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "certificates/" + certId
 	requestParams := `{"teamId":"%s"}`
 	requestParams = fmt.Sprintf(requestParams, that.TeamId)
@@ -338,7 +314,7 @@ csrContent 的数据是base64编码加头尾，
 certTypeName 例子如DEVELOPMENT
 IOS_DEVELOPMENT IOS_DISTRIBUTION MAC_APP_DISTRIBUTION MAC_INSTALLER_DISTRIBUTION MAC_APP_DEVELOPMENT DEVELOPER_ID_KEXT DEVELOPER_ID_APPLICATION DEVELOPMENT DISTRIBUTION PASS_TYPE_ID PASS_TYPE_ID_WITH_NFC
 */
-func (that *DevApiV1) AddCertification(csrContent, certTypeName string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddCertification(csrContent, certTypeName string) *httpz.HttpResponse {
 	//urlStr := "https://developer.apple.com/services-account/QH65B2/account/" + certTypePlatform + "/certificate/submitCertificateRequest.action"
 	urlStr := that.ServiceURL + "certificates"
 	requestParams := `{"data":{"type":"certificates","attributes":{"teamId":"%s","certificateType":"%s","csrContent":"%s"}}}`
@@ -356,7 +332,7 @@ csrContent 的数据是base64编码加头尾，
 certTypeName 例子如DEVELOPMENT
 IOS_DEVELOPMENT IOS_DISTRIBUTION MAC_APP_DISTRIBUTION MAC_INSTALLER_DISTRIBUTION MAC_APP_DEVELOPMENT DEVELOPER_ID_KEXT DEVELOPER_ID_APPLICATION DEVELOPMENT DISTRIBUTION PASS_TYPE_ID PASS_TYPE_ID_WITH_NFC
 */
-func (that *DevApiV1) AddCertificationWithAppId(csrContent, certTypeName string, appIdId string, displayName string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddCertificationWithAppId(csrContent, certTypeName string, appIdId string, displayName string) *httpz.HttpResponse {
 	//params.with("data").with("attributes").put("certificateType", CertTypeBean.IOS_DEVELOPMENT);
 	//params.with("data").with("attributes").put("csrContent", csrContent);
 	//params.with("data").with("attributes").put("machineId", UUID.randomUUID().toString());
@@ -388,7 +364,7 @@ func (that *DevApiV1) AddCertificationWithAppId(csrContent, certTypeName string,
 	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusCreated)
 	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
-func (that *DevApiV1) AddCertificationService(csrContent, appIdId, certTypeId string, certTypeIDFieldName string) *httpz.HttpResponse {
+func (that *ItcApiV3) AddCertificationService(csrContent, appIdId, certTypeId string, certTypeIDFieldName string) *httpz.HttpResponse {
 	//urlStr := "https://developer.apple.com/services-account/QH65B2/account/" + certTypePlatform + "/certificate/submitCertificateRequest.action"
 
 	urlStr := that.ServiceURL + "certificates"
@@ -409,112 +385,78 @@ func (that *DevApiV1) AddCertificationService(csrContent, appIdId, certTypeId st
 	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
+// 指定证书根目录，创建证书并返回证书的具体路径
+// 此接口包括了对证书的创建请求，和查询获取请求和存储证书到文件
 /*
-	func AddCertEasy(that *DevApiV1, certRoot string, email string, name string, password string, certTypeName string, saveAu bool, appidid string) (string, *errorz.StatusError) {
-		tempDir := fmt.Sprintf("%s/%d", certRoot, time.Now().Unix())
-		if certTypeName == "APPLE_PAY" { //required ecc
-			e1 := util.CreateCertRequestEcc(tempDir, email, name)
-			if e1 != nil {
-				return "", errorz.NewInternalError(e1.Error())
-			}
-		} else { //APPLE_PAY_RSA or other cert
-			e1 := util.CreateCertRequest(tempDir, email, name)
-			if e1 != nil {
-				return "", errorz.NewInternalError(e1.Error())
-			}
-		}
-
-		csr, _ := os.ReadFile(path.Join(tempDir, "csr.pem"))
-		csrStr := strings.Replace(string(csr), "\n", "\\n", -1)
-		response, e2 := that.AddCertificationWithAppId(string(csrStr), certTypeName, appidid, name)
-		if e2 != nil {
-			ee := os.RemoveAll(tempDir)
-			if ee != nil {
-				log.Infof("remove fail %s", ee.Error())
-			}
-			return "", e2
-		}
-		tempDir2 := fmt.Sprintf("%s/%s", certRoot, response.Id)
-		os.Rename(tempDir, tempDir2)
-		tempDir = tempDir2
-		util.WriteAppleCertContentToFile(response.Attributes.CertificateContent, path.Join(tempDir, "cert.pem"))
-		_, e4 := util.WriteP12File(path.Join(tempDir, "pri.pem"), path.Join(tempDir, "cert.pem"), path.Join(tempDir, "cert.p12"), password)
-		if e4 != nil {
-			return "", errorz.NewInternalError(e4.Error())
-		}
-		p12Data, e := os.ReadFile(path.Join(tempDir, "cert.p12"))
-		if e != nil {
-			return "", errorz.NewInternalError(e.Error())
-		}
-		if saveAu {
-			appuploaderapi.NewClient().UploadCert(email, response.Id, response.Attributes.ExpirationDate, p12Data)
-		}
-		return path.Join(tempDir, "cert.p12"), nil
-	}
+{
+  "data" : {
+    "type" : "certificates",
+    "id" : "LPZ72GNF22",
+    "attributes" : {
+      "requesterEmail" : null,
+      "serialNumber" : "33BB014E0E0A5B280FF0B999E164A43B",
+      "certificateContent" : "MIIFxDCCBKygAwIBAgIQM7sBTg4KWygP8LmZ4WSkOzANBgkqhkiG9w0BAQsFADB1MUQwQgYDVQQDDDtBcHBsZSBXb3JsZHdpZGUgRGV2ZWxvcGVyIFJlbGF0aW9ucyBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTELMAkGA1UECwwCRzMxEzARBgNVBAoMCkFwcGxlIEluYy4xCzAJBgNVBAYTAlVTMB4XDTIyMTExMDA4MDk1MloXDTIzMTExMDA4MDk1MVowgYoxGjAYBgoJkiaJk/IsZAEBDApRS1cyOTk0WU1XMTQwMgYDVQQDDCtBcHBsZSBEZXZlbG9wbWVudDogWWluZ2tlIFpob3UgKDJSQTNFQzhTUlgpMRMwEQYDVQQLDApDUzJBREQ5RjdGMRQwEgYDVQQKDAtZaW5na2UgWmhvdTELMAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDOeO3Kht2DV78LL6cGfn/lbL9fdpnGlzxjwBVlkias2kseahABcfTtNRJnQaUZAIG+poDD0/Ue5Md8rrLp2wrPFz5U8UUozoqoERF8M9X+5A7VlbYjBRfRisiPmIXf97mGmbYZaYq1GTual0W55yQfo8Wa/sdc7+MvA6S6zznH+l1cW9icMFTndIMaKevQP7G2IbBxfeVnaSa0E/n3O/2uD6PpSWquluvLYFbp9QnVQ+QCOzlA7zuHb7fZZeMY/IPcfxjEVvwhD7mVWYqUDGqTbkFu13aRXGhxMej9s0eE8kIVZPfhIhQKw6nafDz8fzi8n2dAHVPFt4g9YBTOUFGBAgMBAAGjggI4MIICNDAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFAn+wBWQ+a9kCpISuSYoYwyX7KeyMHAGCCsGAQUFBwEBBGQwYjAtBggrBgEFBQcwAoYhaHR0cDovL2NlcnRzLmFwcGxlLmNvbS93d2RyZzMuZGVyMDEGCCsGAQUFBzABhiVodHRwOi8vb2NzcC5hcHBsZS5jb20vb2NzcDAzLXd3ZHJnMzA0MIIBHgYDVR0gBIIBFTCCAREwggENBgkqhkiG92NkBQEwgf8wgcMGCCsGAQUFBwICMIG2DIGzUmVsaWFuY2Ugb24gdGhpcyBjZXJ0aWZpY2F0ZSBieSBhbnkgcGFydHkgYXNzdW1lcyBhY2NlcHRhbmNlIG9mIHRoZSB0aGVuIGFwcGxpY2FibGUgc3RhbmRhcmQgdGVybXMgYW5kIGNvbmRpdGlvbnMgb2YgdXNlLCBjZXJ0aWZpY2F0ZSBwb2xpY3kgYW5kIGNlcnRpZmljYXRpb24gcHJhY3RpY2Ugc3RhdGVtZW50cy4wNwYIKwYBBQUHAgEWK2h0dHBzOi8vd3d3LmFwcGxlLmNvbS9jZXJ0aWZpY2F0ZWF1dGhvcml0eS8wFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwMwHQYDVR0OBBYEFNHWr/Lps26n584veHYglzMQFUPoMA4GA1UdDwEB/wQEAwIHgDATBgoqhkiG92NkBgECAQH/BAIFADATBgoqhkiG92NkBgEMAQH/BAIFADANBgkqhkiG9w0BAQsFAAOCAQEAka6gNO65q8Eb3+qgYPNbwS2inNzB6d59uqtr5YkYU4VTisfY4AJzLfFuBdyNgN4Epb5p/CAgjLK5nyj4iFoq4uAv3+kzs93kEP8uFXilWEBd0fyWhjZP03ASLhIPHmxrcHAeji3hr6FeV4ZsJwKCls6Ytcl/t8hbWOyXhtgR/vqaJ1IuHrU3J27n29tx0Q4DETmJbV+peMST3XLadnnhbEVCCW8nVT+TmpwV138AD8HTshjx34ETghEWh06CO+RNiZ0a09wORBgxi2F8BNCavSWxG6OIkPe4w23iepVpnNjbxUC1qN92A7nFJsPs+uBzqzipu5+/kiTmK/FzDpBQPg==",
+      "displayName" : "Yingke Zhou",
+      "requesterLastName" : null,
+      "csrContent" : null,
+      "machineName" : null,
+      "platform" : null,
+      "requesterFirstName" : null,
+      "machineId" : null,
+      "name" : "Apple Development: Yingke Zhou",
+      "responseId" : "68bc72e3-cfc0-4fd8-8dbb-05727cbf51cb",
+      "expirationDate" : "2023-11-10T08:09:51.000+00:00",
+      "certificateType" : "DEVELOPMENT"
+    },
+    "links" : {
+      "self" : "https://developerservices2.apple.com:443/services/v1/certificates/LPZ72GNF22"
+    }
+  },
+  "links" : {
+    "self" : "https://developerservices2.apple.com:443/services/v1/certificates"
+  }
+}
 */
-type BundleIDBean struct {
-	Type          string               `json:"type"`
-	Id            string               `json:"id"`
-	Attributes    ListBundleAttributes `json:"attributes"`
-	Relationships struct {
-		BundleIdCapabilities struct {
-			Meta struct {
-				Paging struct {
-					Total int `json:"total"`
-					Limit int `json:"limit"`
-				} `json:"paging"`
-			} `json:"meta"`
-			Links struct {
-				Self    string `json:"self"`
-				Related string `json:"related"`
-			} `json:"links"`
-		} `json:"bundleIdCapabilities"`
-		Profiles struct {
-			Meta struct {
-				Paging struct {
-					Total int `json:"total"`
-					Limit int `json:"limit"`
-				} `json:"paging"`
-			} `json:"meta"`
-			Links struct {
-				Self    string `json:"self"`
-				Related string `json:"related"`
-			} `json:"links"`
-		} `json:"profiles"`
-	} `json:"relationships"`
-	Links struct {
-		Self string `json:"self"`
-	} `json:"links"`
-}
-type ListBundleAttributes struct {
-	Identifier                        string      `json:"identifier"`
-	DateModified                      time.Time   `json:"dateModified"`
-	EntitlementGroupName              interface{} `json:"entitlementGroupName"`
-	BundleType                        string      `json:"bundleType"`
-	Platform                          string      `json:"platform"`
-	Wildcard                          bool        `json:"wildcard"`
-	DateCreated                       time.Time   `json:"dateCreated"`
-	BundleIdCapabilitiesSettingOption interface{} `json:"bundleIdCapabilitiesSettingOption"`
-	SeedId                            string      `json:"seedId"`
-	Name                              string      `json:"name"`
-	PlatformName                      string      `json:"platformName"`
-	DeploymentDataNotice              interface{} `json:"deploymentDataNotice"`
-	ResponseId                        string      `json:"responseId"`
-}
+/*
+func AddCertEasy(that *ItcApiV3, certRoot string, email string, name string, password string, certTypeName string, saveAu bool, appidid string) (string, *errorz.StatusError) {
+	tempDir := fmt.Sprintf("%s/%d", certRoot, time.Now().Unix())
+	if certTypeName == "APPLE_PAY" { //required ecc
+		e1 := util.CreateCertRequestEcc(tempDir, email, name)
+		if e1 != nil {
+			return "", errorz.NewInternalError(e1.Error())
+		}
+	} else { //APPLE_PAY_RSA or other cert
+		e1 := util.CreateCertRequest(tempDir, email, name)
+		if e1 != nil {
+			return "", errorz.NewInternalError(e1.Error())
+		}
+	}
 
-func xcodeApiV1Header(gstoken string, adsid string, sessionId string) map[string]string {
-	header := map[string]string{
-		"User-Agent":       httpz.UserAgent_XCode_Simple,
-		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
-		"X-Requested-With": "XMLHttpRequest",
-		"Content-Type":     httpz.ContentType_VND_JSON,
-		"X-Apple-App-Info": "com.apple.gs.xcode.auth",
-		"X-Xcode-Version":  "14.2 (14C18)",
+	csr, _ := os.ReadFile(path.Join(tempDir, "csr.pem"))
+	csrStr := strings.Replace(string(csr), "\n", "\\n", -1)
+	response, e2 := that.AddCertificationWithAppId(string(csrStr), certTypeName, appidid, name)
+	if e2 != nil {
+		ee := os.RemoveAll(tempDir)
+		if ee != nil {
+			log.Infof("remove fail %s", ee.Error())
+		}
+		return "", e2
 	}
-	header["X-Apple-I-Identity-Id"] = adsid
-	header["X-Apple-GS-Token"] = gstoken
-	if sessionId != "" {
-		header["DSESSIONID"] = sessionId
+	tempDir2 := fmt.Sprintf("%s/%s", certRoot, response.Id)
+	os.Rename(tempDir, tempDir2)
+	tempDir = tempDir2
+	util.WriteAppleCertContentToFile(response.Attributes.CertificateContent, path.Join(tempDir, "cert.pem"))
+	_, e4 := util.WriteP12File(path.Join(tempDir, "pri.pem"), path.Join(tempDir, "cert.pem"), path.Join(tempDir, "cert.p12"), password)
+	if e4 != nil {
+		return "", errorz.NewInternalError(e4.Error())
 	}
-	return header
+	p12Data, e := os.ReadFile(path.Join(tempDir, "cert.p12"))
+	if e != nil {
+		return "", errorz.NewInternalError(e.Error())
+	}
+	if saveAu {
+		appuploaderapi.NewClient().UploadCert(email, response.Id, response.Attributes.ExpirationDate, p12Data)
+	}
+	return path.Join(tempDir, "cert.p12"), nil
 }
+*/

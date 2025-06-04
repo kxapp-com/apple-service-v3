@@ -1,4 +1,4 @@
-package xcode
+package beans
 
 const VerifyCodeMode_SMS = "sms"
 const VerifyCodeMode_Voice = "voice"

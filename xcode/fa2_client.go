@@ -39,7 +39,7 @@ func (client *Fa2Client) LoadTwoStepDevices() *httpz.HttpResponse {
 }
 
 func (client *Fa2Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
-	if codeType == VerifyCodeMode_Device {
+	if codeType == "device" {
 		return client.verifyDeviceCode(code)
 	} else {
 		return client.verifySMSVoiceCode(phoneId, code, codeType)
@@ -75,7 +75,7 @@ func (client *Fa2Client) verifyDeviceCode(code string) *httpz.HttpResponse {
 }
 
 func (client *Fa2Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
-	if codeType == VerifyCodeMode_Device {
+	if codeType == "device" {
 		return client.requestDeviceCode()
 	} else {
 		return client.requestSMSVoiceCode(phoneId, codeType)
