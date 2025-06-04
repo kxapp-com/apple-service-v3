@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-// ItcApiV3 represents the Apple iTunes Connect API v3 client
 type ItcApiV3 struct {
 	HttpClient      *http.Client
 	JsonHttpHeaders map[string]string
@@ -19,14 +18,8 @@ type ItcApiV3 struct {
 	//https://developerservices2.apple.com/services/v1/
 	//https://developer.apple.com/services-account/v1/
 	ServiceURL string
-	//CachedHeaderHandler func(response *http.Response)
-	IsSessionTimeOut bool
-	userName         string
+	userName   string
 }
-
-//	func (that *ItcApiV3) IsXCodeAPI() bool {
-//		return strings.Index(that.ServiceURL, "developerservices2.apple.com") > 0
-//	}
 
 // BeforeReturnAction handles response headers and session timeout
 func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
@@ -41,9 +34,6 @@ func (that *ItcApiV3) BeforeReturnAction(response *http.Response) {
 	if csrf_ts != "" {
 		that.JsonHttpHeaders["csrf_ts"] = csrf_ts
 	}
-	if response.StatusCode >= http.StatusBadRequest {
-		that.IsSessionTimeOut = true
-	}
 }
 
 // ListDevices retrieves a list of registered devices
@@ -53,16 +43,6 @@ func (that *ItcApiV3) ListDevices() *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).SetHeader("X-HTTP-Method-Override", http.MethodGet).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//beans, e := ParseJsonResponseV1[[]ListDeviceBean](request.Request(that.HttpClient), http.StatusOK)
-	//if e != nil {
-	//	return nil, e
-	//}
-	//var devices []DeviceBean
-	//for _, d := range *beans {
-	//	devices = append(devices, DeviceBean{DeviceId: d.Id, Name: d.Attributes.Name, DeviceNumber: d.Attributes.Udid, DevicePlatform: d.Attributes.Platform, Status: d.Attributes.Status,
-	//		DeviceClass: d.Attributes.DeviceClass, DateAdded: d.Attributes.AddedDate})
-	//}
-	//return devices, e
 }
 
 // AddDevicesValidate validates a device before adding
@@ -77,18 +57,11 @@ func (that *ItcApiV3) AddDevices(udid string, deviceName string) *httpz.HttpResp
 
 // addAndValidateDevice handles device addition and validation
 func (that *ItcApiV3) addAndValidateDevice(udid string, deviceName string, urlStr string) *httpz.HttpResponse {
-	//requestParamJS:=`{"data":{"type":"devices","attributes":{"teamId":"57W66QZCMN","name":"877028320's Mac","udid":"564D04F2-0FCD-22A6-5252-EB8DCCEE0E95","platform":"MACOS"}}}`
 	requestParamJS := fmt.Sprintf(`{"data":{"type":"devices","attributes":{"teamId":"%s","name":"%s","udid":"%s","platform":"%s"}}}`,
 		that.TeamId, deviceName, udid, "IOS")
-	//fmt.Printf(requestParamJS)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//devices, e := ParseJsonResponseV1[[]DeviceBean](request.Request(that.HttpClient), http.StatusCreated)
-	//if e == nil && len(*devices) > 0 {
-	//	return &((*devices)[0]), e
-	//}
-	//return nil, e
 }
 
 // UpdateDeviceName updates the name of a device
@@ -100,14 +73,8 @@ func (that *ItcApiV3) UpdateDeviceName(deviceIdID string, deviceName string) *ht
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//devices, e := ParseJsonResponseV1[[]DeviceBean](request.Request(that.HttpClient), http.StatusCreated)
-	//if e == nil && len(*devices) > 0 {
-	//	return &((*devices)[0]), e
-	//}
-	//return nil, e
 }
 
-// UpdateDeviceStatus updates the status of a device
 func (that *ItcApiV3) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.HttpResponse {
 	urlStr := that.ServiceURL + "devices/" + deviceIdID
 	status := "DISABLED"
@@ -119,12 +86,6 @@ func (that *ItcApiV3) UpdateDeviceStatus(deviceIdID string, enable bool) *httpz.
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParamJS).BeforeReturn(that.BeforeReturnAction).Request(that.HttpClient)
 	return request
-	//devices, e := ParseJsonResponseV1[ListDeviceBean](request, http.StatusOK)
-	//return devices, e
-	//if e == nil && len(*devices) > 0 {
-	//	return &((*devices)[0]), e
-	//}
-	//return nil, e
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +97,6 @@ func (that *ItcApiV3) ListBundleID() *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[[]BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
-	//return *b, e
 }
 
 func (that *ItcApiV3) GetBundleID(bundleIDId string) *httpz.HttpResponse {
@@ -147,7 +106,6 @@ func (that *ItcApiV3) GetBundleID(bundleIDId string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) AddBundleID(bundleId string, name string, enablepush bool) *httpz.HttpResponse {
@@ -164,7 +122,6 @@ func (that *ItcApiV3) AddBundleID(bundleId string, name string, enablepush bool)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(param).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusCreated)
 }
 
 func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
@@ -174,8 +131,6 @@ func (that *ItcApiV3) RemoveBundleID(bundleIDId string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodDelete)
 	return request.Request(that.HttpClient)
-	//_, e := ParseJsonResponseV1[map[string]any](request.Request(that.HttpClient), http.StatusNoContent)
-	//return e
 }
 
 func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpResponse {
@@ -185,7 +140,6 @@ func (that *ItcApiV3) UpdateBundleIDDes(bean *beans.BundleIDBean) *httpz.HttpRes
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(params).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpResponse {
@@ -195,8 +149,6 @@ func (that *ItcApiV3) GetBundleCapabilities(bundleIdID string) *httpz.HttpRespon
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//b, e := ParseJsonResponseV1[[]CapabilityBean](request.Request(that.HttpClient), http.StatusOK)
-	//return *b, e
 }
 
 func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacityId string, enable bool) *httpz.HttpResponse {
@@ -206,7 +158,6 @@ func (that *ItcApiV3) UpdateBundleCapabilities(bean beans.BundleIDBean, capacity
 	request := httpz.NewHttpRequestBuilder(http.MethodPatch, urlStr).AddHeaders(that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(param).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[BundleIDBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) ListBundleIDByCertType(certTypeId string, platform string) *httpz.HttpResponse {
@@ -216,7 +167,6 @@ func (that *ItcApiV3) ListBundleIDByCertType(certTypeId string, platform string)
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_Form_URL).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).Accept(httpz.AcceptType_JSON) //.SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonQH65B2[[]map[string]any](request.Request(that.HttpClient), "identifierList", http.StatusOK)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -236,8 +186,6 @@ func (that *ItcApiV3) ListProfile(profileType string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).SetHeader("X-HTTP-Method-Override", http.MethodGet).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//v, e := ParseV1ListProfileResponse(request.Request(that.HttpClient), http.StatusOK)
-	//return v, e
 }
 
 // ddd, e := client.GetProfile("2RA8BUG9LN")
@@ -248,7 +196,6 @@ func (that *ItcApiV3) GetProfile(profileId string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) AddProfile(name string, profileType string, bundleIDid string, certIDs []string, deviceIDs []string) *httpz.HttpResponse {
@@ -272,7 +219,6 @@ func (that *ItcApiV3) AddProfile(name string, profileType string, bundleIDid str
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusCreated)
 }
 
 func (that *ItcApiV3) RemoveProfile(profileId string) *httpz.HttpResponse {
@@ -282,7 +228,6 @@ func (that *ItcApiV3) RemoveProfile(profileId string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodDelete)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[ProfileBean](request.Request(that.HttpClient), http.StatusNoContent)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,8 +248,6 @@ func (that *ItcApiV3) ListCertifications(certificationType string) *httpz.HttpRe
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(params).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[[]CertificationBean](request.Request(that.HttpClient), http.StatusOK)
-	//return *b, e
 }
 
 func (that *ItcApiV3) GetCertification(certID string) *httpz.HttpResponse {
@@ -315,7 +258,6 @@ func (that *ItcApiV3) GetCertification(certID string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodGet)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) RemoveCertification(certId string) *httpz.HttpResponse {
@@ -325,8 +267,6 @@ func (that *ItcApiV3) RemoveCertification(certId string) *httpz.HttpResponse {
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction).SetHeader("X-HTTP-Method-Override", http.MethodDelete)
 	return request.Request(that.HttpClient)
-	//_, err := ParseJsonResponseV1[map[string]any](request.Request(that.HttpClient), http.StatusNoContent)
-	//return err
 }
 
 /*
@@ -343,8 +283,6 @@ func (that *ItcApiV3) AddCertification(csrContent, certTypeName string) *httpz.H
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusCreated)
-	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 /*
@@ -382,8 +320,6 @@ func (that *ItcApiV3) AddCertificationWithAppId(csrContent, certTypeName string,
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusCreated)
-	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 func (that *ItcApiV3) AddCertificationService(csrContent, appIdId, certTypeId string, certTypeIDFieldName string) *httpz.HttpResponse {
@@ -403,8 +339,6 @@ func (that *ItcApiV3) AddCertificationService(csrContent, appIdId, certTypeId st
 	request := httpz.Post(urlStr, that.JsonHttpHeaders).ContentType(httpz.ContentType_VND_JSON).
 		AddBody(requestParams).BeforeReturn(that.BeforeReturnAction)
 	return request.Request(that.HttpClient)
-	//return ParseJsonResponseV1[CertificationBean](request.Request(that.HttpClient), http.StatusCreated)
-	//return ParseJsonResponseV1[CertificationRequestBean](request.Request(that.HttpClient), http.StatusOK)
 }
 
 // 指定证书根目录，创建证书并返回证书的具体路径
