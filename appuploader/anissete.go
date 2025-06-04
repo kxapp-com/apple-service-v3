@@ -19,6 +19,21 @@ type AnisseteData struct {
 	XMmeDeviceId      string    `json:"X-Mme-Device-Id"`
 }
 
+func (a *AnisseteData) ToMap() map[string]string {
+	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
+	headers := make(map[string]string)
+	headers["X-Apple-I-MD"] = a.XAppleIMD
+	headers["X-Apple-I-MD-LU"] = a.XAppleIMDLU
+	headers["X-Apple-I-MD-M"] = a.XAppleIMDM
+	headers["X-Apple-I-MD-RINFO"] = a.XAppleIMDRINFO
+	headers["X-Apple-I-TimeZone"] = a.XAppleITimeZone
+	headers["X-Apple-Locale"] = a.XAppleLocale
+	headers["X-Mme-Client-Info"] = a.XMmeClientInfo
+	headers["X-Mme-Device-Id"] = a.XMmeDeviceId
+	headers["X-Apple-I-Client-Time"] = time.Now().Format(XCode_Client_Time_Format)
+	return headers
+}
+
 func GetAnisseteFromAu(email string) (*AnisseteData, error) {
 	appuploader := NewClient()
 	//appuploader.ApiUrlList = []string{"http://appuploader.net/appuploadapi2.php"}

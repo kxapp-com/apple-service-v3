@@ -3,135 +3,46 @@ package xcode
 import (
 	"errors"
 	"fmt"
-
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/appuploader/apple-service-v3/xcodeauth/gsa"
-
-	//"github.com/appuploader/apple-service-v3/xcode/gsa"
-	"github.com/google/uuid"
-	//gsasrp2 "github.com/kxapp-com/apple-service/pkg/gsa/gsasrp"
+	"maps"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"
 )
 
-type XcodeToken struct {
-	Email string `json:"email"`
-	//gsa 业务逻辑请求中需要用到的头X-Apple-GS-Token
-	XAppleGSToken string `json:"X-Apple-GS-Token"`
-	//gsa请求中需要用到的头X-Apple-I-Identity-Id
-	Adsid string `json:"Adsid"`
-}
-
 type Client struct {
-	httpClient     *http.Client
-	Token          *XcodeToken
-	xcodeSessionID string
-	anisseteData   *appuploader.AnisseteData
-	userName       string
-	password       string
+	httpClient *http.Client
+	//Token          *XcodeToken
+	//xcodeSessionID string
 
-	fa2Client *Fa2Client
+	//anisseteData   *appuploader.AnisseteData
+	userName string
+	password string
+
+	headers   map[string]string
+	serverURL string
 }
 
 func NewClient() *Client {
 	return &Client{
 		httpClient: httpz.NewHttpClient(nil),
+		serverURL:  "https://gsa.apple.com/auth",
 	}
 }
 func (client *Client) Login(userName string, password string) *httpz.HttpResponse {
 	client.userName = userName
 	client.password = password
-	t, e := storage.Read[XcodeToken](userName, storage.TokenTypeXcode)
-	if e == nil {
-		client.Token = t
-	} else {
-		client.Token = &XcodeToken{Email: userName}
-	}
-
-	if client.IsSessionAlive() {
-		return &httpz.HttpResponse{Status: http.StatusOK, Body: []byte("session is alive")}
-	}
-	return client.CheckPassword()
-}
-func (client *Client) IsSessionAlive() bool {
-	if client.Token.XAppleGSToken != "" {
-		response := client.postXcode("viewDeveloper.action")
-		return response.Status == http.StatusOK
-	}
-	return false
-}
-
-func (client *Client) ViewTeams() *httpz.HttpResponse {
-	return client.postXcode("listTeams.action")
-}
-
-func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
-	return client.fa2Client.LoadTwoStepDevices()
-	//if e != nil {
-	//	return e.AsStatusResult()
+	//t, e := storage.Read[XcodeToken](userName, storage.TokenTypeXcode)
+	//if e == nil {
+	//	client.Token = t
+	//} else {
+	//	client.Token = &XcodeToken{}
 	//}
-	//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
-}
-func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
-	return client.fa2Client.RequestVerifyCode(codeType, phoneId)
-}
-
-/*
-在verify返回成功后请立即调用CheckPassword再次登录
-*/
-func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
-	r := client.fa2Client.VerifyCode(codeType, code, phoneId)
-	if r.Status == http.StatusOK {
-		return client.CheckPassword()
-	}
-	return r
-}
-
-/*
-*
-xcode plist request QH65B2
-*/
-func (client *Client) postXcode(action string) *httpz.HttpResponse {
-	headers := xcodeServiceHeader(client.Token.XAppleGSToken, client.Token.Adsid)
-	if client.xcodeSessionID != "" {
-		headers["DSESSIONID"] = client.xcodeSessionID
-		if client.anisseteData == nil {
-			d, eee := appuploader.GetAnisseteFromAu(client.Token.Email)
-			if eee != nil {
-				return &httpz.HttpResponse{Error: eee, Status: 500}
-			}
-			client.anisseteData = d
-		}
-	} else {
-		//if client.anisseteData == nil {
-		d, eee := appuploader.GetAnisseteFromAu(client.Token.Email)
-		if eee != nil {
-			return &httpz.HttpResponse{Error: eee, Status: 500}
-		}
-		client.anisseteData = d
-		//}
-
-	}
-	if client.anisseteData == nil {
-		return &httpz.HttpResponse{Error: errors.New("load required data fail")}
-	}
-	AddAnisseteHeaders(client.anisseteData, headers)
-	urlStr := fmt.Sprintf("https://developerservices2.apple.com/services/QH65B2/%s?clientId=XABBG36SBA", action)
-	protocolStruct := map[string]any{"clientId": "XABBG36SBA", "protocolVersion": "QH65B2", "requestId": uuid.New().String()}
-	requestBody, _ := plist.Marshal(protocolStruct, plist.XMLFormat)
-	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(headers).AddBody(requestBody).Request(client.httpClient)
-	DSESSIONID := response.Header.Get("DSESSIONID")
-	if DSESSIONID != "" {
-		if DSESSIONID != client.xcodeSessionID && client.xcodeSessionID != "" {
-			fmt.Printf(" \n------------------xcodeSessionID  %s changed to %s\n", client.xcodeSessionID, DSESSIONID)
-		}
-		client.xcodeSessionID = DSESSIONID
-	}
-	return response
+	return client.CheckPassword()
 }
 
 /*
@@ -139,13 +50,13 @@ func (client *Client) postXcode(action string) *httpz.HttpResponse {
 返回二次校验的设备列表，或者得到xctoken后返回登录成功消息，或者返回失败的提示消息
 */
 func (client *Client) CheckPassword() *httpz.HttpResponse {
-	anissete, ee := appuploader.GetAnisseteFromAu(client.Token.Email)
+	anissete, ee := appuploader.GetAnisseteFromAu(client.userName)
 	if ee != nil {
 		return &httpz.HttpResponse{Error: ee, Status: 500}
 		//return ParsedResponse{Status: ee.Error()}
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
-	//client.anisseteData = anissete
+
 	result, status := gsa.Login(client.userName, client.password, anissete)
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
@@ -157,7 +68,11 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 	}
 	//return &spd, nil
 	if spd.StatusCode == http.StatusConflict {
-		client.fa2Client = NewXcodeFa2Client(client.httpClient, spd.GetAppleIdToken(), anissete)
+		//client.anisseteData = anissete
+		client.headers = xcodeStep2Header()
+		maps.Copy(client.headers, anissete.ToMap())
+		client.headers["X-Apple-Identity-Token"] = spd.GetAppleIdToken()
+		//client.fa2Client = NewXcodeFa2Client(client.httpClient, spd.GetAppleIdToken(), anissete)
 	} else if spd.StatusCode == http.StatusOK {
 		xt, e := gsa.FetchXCodeToken(&spd, anissete)
 		if e != nil {
@@ -165,9 +80,13 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 			return &httpz.HttpResponse{Error: e, Status: e.Status}
 		}
 		if xt != nil {
-			client.Token.XAppleGSToken = xt.Token
-			client.Token.Adsid = spd.Adsid
-			saveE := storage.Write(client.Token.Email, storage.TokenTypeXcode, client.Token)
+			token := &XcodeToken{
+				XAppleGSToken: xt.Token,
+				Adsid:         spd.Adsid,
+			}
+			//client.Token.XAppleGSToken = xt.Token
+			//client.Token.Adsid = spd.Adsid
+			saveE := storage.Write(client.userName, storage.TokenTypeXcode, token)
 			if saveE != nil {
 				fmt.Println("save token error", saveE)
 			}
@@ -179,18 +98,130 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 
 }
 
+//	func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
+//		return client.fa2Client.LoadTwoStepDevices()
+//		//if e != nil {
+//		//	return e.AsStatusResult()
+//		//}
+//		//return errorz.SuccessStatusResult(r.TrustedPhoneNumbers)
+//	}
+//
+//	func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
+//		return client.fa2Client.RequestVerifyCode(codeType, phoneId)
+//	}
+//
+// /*
+// 在verify返回成功后请立即调用CheckPassword再次登录
+// */
+//
+//	func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
+//		r := client.fa2Client.VerifyCode(codeType, code, phoneId)
+//		if r.Status == http.StatusOK {
+//			return client.CheckPassword()
+//		}
+//		return r
+//	}
+//
+// /*
+// 没登录状态调用返回status http.StatusUnauthorized
+// */
+//
+//	func (client *Client) LoadTwoStepDevices() *httpz.HttpResponse {
+//		request := httpz.NewHttpRequestBuilder(http.MethodGet, client.serverURL).AddHeaders(client.headers)
+//		//request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/","X-Apple-I-FD-Client-Info": `{"U":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36","L":"zh-CN","Z":"GMT+08:00","V":"1.1","F":"Fla44j1e3NlY5BNlY5BSmHACVZXnNA9bgZ7Tk._HazLu_dYV6Hycfx9MsFY5CKw.Tf5.EKWJ9Y69D9fmaUeJz13NlY5BNp55BNlan0Os5Apw.38I"}`})
+//		request.AddHeaders(map[string]string{"Referer": "https://idmsa.apple.com/"})
+//		return request.Request(client.httpClient)
+//	}
+func (client *Client) VerifyCode(codeType string, code string, phoneId string) *httpz.HttpResponse {
+	var r *httpz.HttpResponse
+	if codeType == "device" {
+		r = client.verifyDeviceCode(code)
+	} else {
+		r = client.verifySMSVoiceCode(phoneId, code, codeType)
+	}
+	if r.Status == http.StatusOK {
+		return client.CheckPassword()
+	}
+	return r
+}
+
+/*
+校验短信或者电话验证码
+*/
+func (client *Client) verifySMSVoiceCode(phoneId string, code string, codeType string) *httpz.HttpResponse {
+	//param := `{"phoneNumber": {"id": %s}, "securityCode": {"code": %s}, "mode": "%s"}`
+	param := `{"phoneNumber": {"id": %s}, "securityCode": {"code": "%s"}, "mode": "%s"}`
+	param = fmt.Sprintf(param, phoneId, code, codeType)
+	urlStr := client.serverURL + "/verify/phone/securitycode"
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	return response
+}
+func (client *Client) requestDeviceCode() *httpz.HttpResponse {
+	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).Request(client.httpClient)
+	return response
+}
+
+/*
+校验设备码，返回423状态码的时候携带的是设备列表，和getdevice的数据一样,423表示校验码发送太多，409表示2次校验，400表示错误errorMessage
+*/
+func (client *Client) verifyDeviceCode(code string) *httpz.HttpResponse {
+	param := `{"securityCode": {"code": "%s"}}`
+	param = fmt.Sprintf(param, code)
+	urlStr := client.serverURL + "/verify/trusteddevice/securitycode"
+	response := httpz.NewHttpRequestBuilder(http.MethodPost, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	return response
+}
+
+func (client *Client) RequestVerifyCode(codeType string, phoneId string) *httpz.HttpResponse {
+	if codeType == "device" {
+		return client.requestDeviceCode()
+	} else {
+		return client.requestSMSVoiceCode(phoneId, codeType)
+	}
+}
+
+func (client *Client) requestSMSVoiceCode(phoneId string, t string) *httpz.HttpResponse {
+	param := `{"phoneNumber": {"id": %s}, "mode": "%s"}`
+	param = fmt.Sprintf(param, phoneId, t)
+	urlStr := client.serverURL + "/verify/phone"
+	response := httpz.NewHttpRequestBuilder(http.MethodPut, urlStr).AddHeaders(client.headers).AddBody(param).Request(client.httpClient)
+	return response
+}
+
 /*
 *
-请求xcode服务器，如viewdeveloper使用的头
+xcode 二次校验的时候使用的头
 */
-func xcodeServiceHeader(gstoken string, adsid string) map[string]string {
-	headers := make(map[string]string)
-	headers["Accept"] = "text/x-xml-plist"
-	headers["Content-Type"] = "text/x-xml-plist"
-	headers["User-Agent"] = "Xcode"
-	headers["X-Apple-App-Info"] = "com.apple.gs.xcode.auth"
-	headers["X-Xcode-Version"] = "12.4 (12D4e)"
-	headers["X-Apple-GS-Token"] = gstoken
-	headers["X-Apple-I-Identity-Id"] = adsid
-	return headers
+func xcodeStep2Header() map[string]string {
+	return map[string]string{
+		"Content-Type":     httpz.ContentType_JSON,
+		"X-Requested-With": "XMLHttpRequest",
+		"Accept":           "application/json, text/javascript, */*; q=0.01",
+		//"Accept-Language":  "en-US,en;q=0.9",
+		"Accept-Language": "zh-cn",
+		"User-Agent":      httpz.UserAgent_XCode,
+		//"X-MMe-Client-Info": "<iMacPro1,1> <macOS;12.5;21G72> <com.apple.AuthKit/1 (com.apple.dt.Xcode/20504)>",
+		"X-MMe-Client-Info": "<iMac20,2> <Mac OS X;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>",
+		//"X-MMe-Client-Info": "<iMac20,2> <Mac OS X;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/21534)>",
+		"X-Apple-App-Info": "com.apple.gs.xcode.auth",
+		"X-Xcode-Version":  "14.2 (14C18)",
+		//"X-Xcode-Version":   "12.4 (12D4e)",
+	}
 }
+
+//func AddAnisseteHeaders(data *appuploader.AnisseteData, headers map[string]string) map[string]string {
+//	const XCode_Client_Time_Format = "2006-01-02T15:04:05Z"
+//	headers["X-Apple-I-MD"] = data.XAppleIMD
+//	headers["X-Apple-I-MD-LU"] = data.XAppleIMDLU
+//	headers["X-Apple-I-MD-M"] = data.XAppleIMDM
+//	headers["X-Apple-I-MD-RINFO"] = data.XAppleIMDRINFO
+//	headers["X-Apple-I-TimeZone"] = data.XAppleITimeZone
+//	headers["X-Apple-Locale"] = data.XAppleLocale
+//	headers["X-Mme-Client-Info"] = data.XMmeClientInfo
+//	headers["X-Mme-Device-Id"] = data.XMmeDeviceId
+//	headers["X-Apple-I-Client-Time"] = time.Now().Format(XCode_Client_Time_Format)
+//	//headers["X-Apple-I-Client-Time"] = util.GetAppleClientTimeNowString3(data.XAppleIClientTime)
+//	//headers["X-Apple-I-Client-Time"] = time.Now().UTC().Format(util.XCode_Client_Time_Format)
+//	return headers
+//}
