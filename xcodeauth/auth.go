@@ -3,6 +3,7 @@ package xcode
 import (
 	"errors"
 	"fmt"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
@@ -11,9 +12,10 @@ import (
 	//"github.com/appuploader/apple-service-v3/xcode/gsa"
 	"github.com/google/uuid"
 	//gsasrp2 "github.com/kxapp-com/apple-service/pkg/gsa/gsasrp"
+	"net/http"
+
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"
-	"net/http"
 )
 
 type XcodeToken struct {
@@ -23,16 +25,14 @@ type XcodeToken struct {
 	//gsa请求中需要用到的头X-Apple-I-Identity-Id
 	Adsid string `json:"Adsid"`
 }
-type AuthInfo struct {
-	Email    string
-	Password string
-}
+
 type Client struct {
 	httpClient     *http.Client
 	Token          *XcodeToken
 	xcodeSessionID string
 	anisseteData   *appuploader.AnisseteData
-	AuthInfo       AuthInfo
+	userName       string
+	password       string
 
 	fa2Client *Fa2Client
 }
@@ -42,13 +42,14 @@ func NewClient() *Client {
 		httpClient: httpz.NewHttpClient(nil),
 	}
 }
-func (client *Client) Login(authInfo AuthInfo) *httpz.HttpResponse {
-	client.AuthInfo = authInfo
-	t, e := storage.Read[XcodeToken](authInfo.Email, storage.TokenTypeXcode)
+func (client *Client) Login(userName string, password string) *httpz.HttpResponse {
+	client.userName = userName
+	client.password = password
+	t, e := storage.Read[XcodeToken](userName, storage.TokenTypeXcode)
 	if e == nil {
 		client.Token = t
 	} else {
-		client.Token = &XcodeToken{Email: authInfo.Email}
+		client.Token = &XcodeToken{Email: userName}
 	}
 
 	if client.IsSessionAlive() {
@@ -145,7 +146,7 @@ func (client *Client) CheckPassword() *httpz.HttpResponse {
 		//return errorz.NewInternalError("load required data base " + ee.Error()).AsStatusResult()
 	}
 	//client.anisseteData = anissete
-	result, status := gsa.Login(client.AuthInfo.Email, client.AuthInfo.Password, anissete)
+	result, status := gsa.Login(client.userName, client.password, anissete)
 	if status != nil {
 		return &httpz.HttpResponse{Error: status, Status: status.Status}
 	}
