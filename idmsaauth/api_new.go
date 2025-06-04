@@ -4,21 +4,23 @@ import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
-	"github.com/appuploader/apple-service-v3/beans"
+	"github.com/appuploader/apple-service-v3/itcapi"
+
+	//"github.com/appuploader/apple-service-v3/beans"
 	"github.com/appuploader/apple-service-v3/storage"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func NewDevApiV1(userName string) *beans.ItcApiV3 {
+func NewDevApiV1(userName string) *itcapi.ItcApiV3 {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
 		"X-Requested-With": "XMLHttpRequest",
 		"X-Csrf-Itc":       "itc",
 	}
-	api := &beans.ItcApiV3{
+	api := &itcapi.ItcApiV3{
 		HttpClient:      NewHttpClientWithJar(userName),
 		JsonHttpHeaders: itcHeader,
 		ServiceURL:      "https://developer.apple.com/services-account/v1/",

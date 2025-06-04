@@ -3,33 +3,44 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
-	"github.com/appuploader/apple-service-v3/fastlang"
-	"github.com/appuploader/apple-service-v3/xcode"
+	beans "github.com/appuploader/apple-service-v3/model"
+	xcode "github.com/appuploader/apple-service-v3/xcodeauth"
+
+	//"github.com/appuploader/apple-service-v3/xcode"
 	"time"
 )
 
 func main() {
-
-	account := "877028320@qq.com"
-	if fastlang.IsSessionAlive(account) {
-		fmt.Printf("session is alive for account %s\n", account)
-		onSuccess(account)
-		return
-	}
-	client := fastlang.NewAppleAuthClient()
-	r := client.Login(account, "MzdJzm38")
+	client := xcode.NewClient()
+	r := client.Login(xcode.AuthInfo{Email: "877028320@qq.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@gmail.com", Password: "MzdJzm38"})
-	if r.Status == xcode.ErrorCodeInvalidAccount {
+	if r.Status == beans.ErrorCodeInvalidAccount {
 		fmt.Printf("invalid account %+v", r)
 		return
-	} else if r.Status == xcode.ErrorCodeInvalidPassword {
+	} else if r.Status == beans.ErrorCodeInvalidPassword {
 		fmt.Printf("invalid password %+v", r)
 		return
 	}
 	if r.Status == 200 || r.Status == errorz.StatusSuccess {
-		onSuccess(account)
+		t := client.ViewTeams()
+		fmt.Println(t.Status, string(t.Body))
+		apiClient := xcode.NewDevApiV1(client)
+		apiClient.TeamId = "CS2ADD9F7F"
+		//apiClient.TeamId = t.Body.(*xcode.ViewTeamsResponse).Teams[0].TeamId
+		t = apiClient.ListDevices()
+		fmt.Println(t.Status, string(t.Body))
+		t = apiClient.ListBundleID()
+
+		fmt.Println(t.Status, string(t.Body))
+		//if e == nil {
+		//	for _, v := range *t {
+		//		fmt.Printf(v.Name)
+		//	}
+		//} else {
+		//	fmt.Printf(e.Error())
+		//}
 	} else if r.Status == 401 {
 		fmt.Printf("login failed")
 	} else if r.Status == 409 {
@@ -39,7 +50,16 @@ func main() {
 			fmt.Printf("load device failed %+v %v\n", deviceResult.Error, deviceResult.Body)
 			return
 		}
+		//if deviceResult.Status != 0 {
+		//	fmt.Printf("load device failed %+v\n", deviceResult)
+		//	return
+		//}
+		//td := deviceResult.Body.(*xcode.TwoStepDevicesResponse)
 		tdStatus := deviceResult.Status
+		//if deviceResult.Status == 401 {
+		//	fmt.Printf("login failed with 401 %+v\n", deviceResult)
+		//	return
+		//}
 		fmt.Printf("load device success\n")
 		fmt.Printf("%+v", deviceResult)
 		var phoneId = "3"
@@ -59,7 +79,8 @@ func main() {
 				fmt.Println(verifyResult)
 			}
 			if verifyResult.Status == 200 {
-				onSuccess(account)
+				vvv := client.ViewTeams()
+				fmt.Println(vvv)
 			}
 		} else if tdStatus == 200 {
 			fmt.Println("please input device id")
@@ -88,7 +109,8 @@ func main() {
 					fmt.Println(verifyResult)
 				}
 				if verifyResult.Status == 200 {
-					onSuccess(account)
+					vvv := client.ViewTeams()
+					fmt.Println(vvv)
 				}
 			} else {
 				fmt.Printf("request code failed %+v", requestCodeResult)
@@ -101,13 +123,4 @@ func main() {
 		fmt.Printf("%+v", r)
 	}
 	time.Sleep(time.Minute * 5)
-}
-func onSuccess(account string) {
-	a := fastlang.NewDevApiV1(account)
-	t := a.GetItcTeams()
-	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
-	a.TeamId = "CS2ADD9F7F"
-	dvs := a.ListDevices()
-
-	fmt.Printf("list devices %+v %v\n", string(dvs.Body), dvs.Status)
 }
