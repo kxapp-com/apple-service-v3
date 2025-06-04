@@ -6,16 +6,15 @@ import (
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
-	"github.com/appuploader/apple-service-v3/xcode/gsa"
+	"github.com/appuploader/apple-service-v3/xcodeauth/gsa"
+
+	//"github.com/appuploader/apple-service-v3/xcode/gsa"
 	"github.com/google/uuid"
 	//gsasrp2 "github.com/kxapp-com/apple-service/pkg/gsa/gsasrp"
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"
 	"net/http"
 )
-
-const ErrorCodeInvalidAccount = -20751
-const ErrorCodeInvalidPassword = -20101
 
 type XcodeToken struct {
 	Email string `json:"email"`

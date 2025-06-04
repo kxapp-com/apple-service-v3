@@ -2,10 +2,11 @@ package xcode
 
 import (
 	"gitee.com/kxapp/kxapp-common/httpz"
-	"github.com/appuploader/apple-service-v3/beans"
+	//"github.com/appuploader/apple-service-v3/beans"
+	"github.com/appuploader/apple-service-v3/itcapi"
 )
 
-func NewDevApiV1(client *Client) *beans.ItcApiV3 {
+func NewDevApiV1(client *Client) *itcapi.ItcApiV3 {
 	header := map[string]string{
 		"User-Agent":       httpz.UserAgent_XCode_Simple,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
@@ -22,7 +23,7 @@ func NewDevApiV1(client *Client) *beans.ItcApiV3 {
 
 	//headers := xcodeApiV1Header(client.Token.XAppleGSToken, client.Token.Adsid, client.xcodeSessionID)
 	header = AddAnisseteHeaders(client.anisseteData, header)
-	return &beans.ItcApiV3{
+	return &itcapi.ItcApiV3{
 		HttpClient:      client.httpClient,
 		ServiceURL:      "https://developerservices2.apple.com/services/v1/",
 		JsonHttpHeaders: header,
