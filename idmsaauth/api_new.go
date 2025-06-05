@@ -8,7 +8,7 @@ import (
 
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
-	"github.com/appuploader/apple-service-v3/itcapi"
+	"github.com/appuploader/apple-service-v3/itcbase"
 	"github.com/appuploader/apple-service-v3/storage"
 )
 
@@ -48,14 +48,14 @@ func (c *DevClient) GetTeams() *httpz.HttpResponse {
 	return request
 }
 
-func (c *DevClient) GetApiV3() *itcapi.ItcApiV3 {
+func (c *DevClient) GetApiV3() *itcbase.ItcApiV3 {
 	var itcHeader = map[string]string{
 		"User-Agent":       httpz.UserAgent_GoogleChrome,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
 		"X-Requested-With": "XMLHttpRequest",
 		"X-Csrf-Itc":       "itc",
 	}
-	api := &itcapi.ItcApiV3{
+	api := &itcbase.ItcApiV3{
 		HttpClient:      c.httpClient,
 		JsonHttpHeaders: itcHeader,
 		ServiceURL:      "https://developer.apple.com/services-account/v1/",
