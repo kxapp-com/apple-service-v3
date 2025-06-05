@@ -1,8 +1,7 @@
 module github.com/appuploader/apple-service-v3
 
-go 1.23.0
+go 1.23.9
 
-toolchain go1.23.9
 
 require (
 	gitee.com/kxapp/kxapp-common v0.0.0-20250417233955-0bd53c68021b
