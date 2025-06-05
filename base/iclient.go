@@ -8,6 +8,7 @@ type AppleClient interface {
 	IsSessionAlive() bool
 	GetTeams() *httpz.HttpResponse
 	GetApiV3() *ItcApiV3
+	GetUserName() string
 }
 
 // AppleAuthClient defines the common interface for Apple authentication clients

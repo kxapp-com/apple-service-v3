@@ -23,6 +23,9 @@ func NewDevClient(userName string) *DevClient {
 	return &DevClient{userName: userName, httpClient: newHttpClientWithJar(userName)}
 }
 
+func (c *DevClient) GetUserName() string {
+	return c.userName
+}
 func (c *DevClient) IsSessionAlive() bool {
 	response, err := c.httpClient.Get(fmt.Sprintf("%s/v1/profile", BaseURLItc))
 	if err != nil || response.StatusCode != http.StatusOK {

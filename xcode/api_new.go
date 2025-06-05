@@ -37,7 +37,9 @@ func NewXcodeClient(userName string) *XcodeClient {
 	}
 	return client
 }
-
+func (client *XcodeClient) GetUserName() string {
+	return client.userName
+}
 func (client *XcodeClient) IsSessionAlive() bool {
 	if client.token.XAppleGSToken == "" || client.token.Adsid == "" {
 		return false

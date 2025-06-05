@@ -2,38 +2,55 @@ package manager
 
 import (
 	"github.com/appuploader/apple-service-v3/base"
-	fastlang "github.com/appuploader/apple-service-v3/idmsa"
-	xcode "github.com/appuploader/apple-service-v3/xcode"
+	"github.com/appuploader/apple-service-v3/idmsa"
+	"github.com/appuploader/apple-service-v3/xcode"
+	"sync"
 )
 
 type ClientManager struct {
-	appleClient map[string]base.AppleClient
-	authClient  map[string]base.AppleAuthClient
+	appleClient   map[string]base.AppleClient
+	clientApiType map[string]bool
+	mu            sync.Mutex
 }
 
-func NewClientManager() *ClientManager {
-	return &ClientManager{
-		appleClient: make(map[string]base.AppleClient),
-	}
+var (
+	clientManagerInstance *ClientManager
+	onceClientManager     sync.Once
+)
+
+func GetClientManager() *ClientManager {
+	onceClientManager.Do(func() {
+		clientManagerInstance = &ClientManager{
+			appleClient: make(map[string]base.AppleClient),
+		}
+	})
+	return clientManagerInstance
 }
 
 func (c *ClientManager) GetClient(userName string) base.AppleClient {
-	return c.appleClient[userName]
-}
-func (c *ClientManager) GetAuthClient(userName string, xcodeApi bool) base.AppleClient {
-	return c.appleClient[userName]
-}
-func NewAppleClient(userName string, useXcodeApi bool) base.AppleClient {
-	if useXcodeApi {
-		return xcode.NewXcodeClient(userName)
-	} else {
-		return fastlang.NewDevClient(userName)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if client, ok := c.appleClient[userName]; ok {
+		return client
 	}
+	return nil
 }
-func NewAppleAuthClient(useXcodeApi bool) base.AppleAuthClient {
-	if useXcodeApi {
-		return xcode.NewXcodeAuthClient()
-	} else {
-		return fastlang.NewDevAuthClient()
+
+func (c *ClientManager) NewAppleClient(userName string, useXcodeApi bool) base.AppleClient {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if client, ok := c.appleClient[userName]; ok {
+		if c.clientApiType[userName] == useXcodeApi {
+			return client
+		}
 	}
+	var appleClient base.AppleClient
+	if useXcodeApi {
+		appleClient = xcode.NewXcodeClient(userName)
+	} else {
+		appleClient = idmsa.NewDevClient(userName)
+	}
+	c.appleClient[userName] = appleClient
+	c.clientApiType[userName] = useXcodeApi
+	return appleClient
 }
