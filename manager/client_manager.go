@@ -1,4 +1,4 @@
-package itc
+package manager
 
 import (
 	"github.com/appuploader/apple-service-v3/base"
