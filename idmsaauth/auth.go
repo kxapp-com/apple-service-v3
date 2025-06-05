@@ -15,6 +15,7 @@ import (
 	"github.com/appuploader/apple-service-v3/util"
 )
 
+// DevAuthClient implements AppleAuthClient for Developer Portal authentication
 type DevAuthClient struct {
 	httpClient  *http.Client
 	baseHeaders map[string]string

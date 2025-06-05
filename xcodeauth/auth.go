@@ -3,17 +3,19 @@ package xcode
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"net/http"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/appuploader/apple-service-v3/xcodeauth/gsa"
-	"maps"
-	"net/http"
 
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"
 )
 
+// XcodeAuthClient implements AppleAuthClient for Xcode-specific authentication
 type XcodeAuthClient struct {
 	httpClient *http.Client
 	userName   string

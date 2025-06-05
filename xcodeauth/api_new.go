@@ -3,17 +3,19 @@ package xcode
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"net/http"
+	"strings"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/itcapi"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/google/uuid"
 	"howett.net/plist"
-	"maps"
-	"net/http"
-	"strings"
 )
 
+// XcodeClient 实现了 AppleClient 接口
 type XcodeClient struct {
 	httpClient     *http.Client
 	token          XcodeToken
@@ -126,3 +128,5 @@ func xcodeServiceHeader(gstoken string, adsid string) map[string]string {
 	headers["X-Apple-I-Identity-Id"] = adsid
 	return headers
 }
+
+// XcodeClient 实现了 AppleClient 接口

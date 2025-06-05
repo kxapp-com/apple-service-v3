@@ -2,15 +2,17 @@ package fastlang
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
 	"github.com/appuploader/apple-service-v3/itcapi"
 	"github.com/appuploader/apple-service-v3/storage"
-	"io"
-	"net/http"
-	"strings"
 )
 
+// DevClient 实现了 AppleClient 接口
 type DevClient struct {
 	httpClient *http.Client
 	userName   string
