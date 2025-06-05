@@ -21,7 +21,8 @@ var (
 func GetClientManager() *ClientManager {
 	onceClientManager.Do(func() {
 		clientManagerInstance = &ClientManager{
-			appleClient: make(map[string]base.AppleClient),
+			appleClient:   make(map[string]base.AppleClient),
+			clientApiType: make(map[string]bool),
 		}
 	})
 	return clientManagerInstance
