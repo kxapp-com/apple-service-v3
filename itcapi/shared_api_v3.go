@@ -1,12 +1,20 @@
 package itcapi
 
 import (
+	"encoding/json"
 	"fmt"
+	"gitee.com/kxapp/kxapp-common/errorz"
 	"gitee.com/kxapp/kxapp-common/httpz"
+	"github.com/appuploader/apple-service-v3/appuploader"
 	beans "github.com/appuploader/apple-service-v3/model"
+	"github.com/appuploader/apple-service-v3/util"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
+	"path"
 	"strings"
+	"time"
 )
 
 type ItcApiV3 struct {
@@ -376,35 +384,44 @@ func (that *ItcApiV3) AddCertificationService(csrContent, appIdId, certTypeId st
   }
 }
 */
-/*
-func AddCertEasy(that *ItcApiV3, certRoot string, email string, name string, password string, certTypeName string, saveAu bool, appidid string) (string, *errorz.StatusError) {
+
+func (that *ItcApiV3) AddCertEasy(certRoot string, email string, name string, password string, certTypeName string, saveAu bool, appidid string) (string, error) {
 	tempDir := fmt.Sprintf("%s/%d", certRoot, time.Now().Unix())
 	if certTypeName == "APPLE_PAY" { //required ecc
 		e1 := util.CreateCertRequestEcc(tempDir, email, name)
 		if e1 != nil {
-			return "", errorz.NewInternalError(e1.Error())
+			return "", e1
 		}
 	} else { //APPLE_PAY_RSA or other cert
 		e1 := util.CreateCertRequest(tempDir, email, name)
 		if e1 != nil {
-			return "", errorz.NewInternalError(e1.Error())
+			return "", e1
 		}
 	}
 
 	csr, _ := os.ReadFile(path.Join(tempDir, "csr.pem"))
 	csrStr := strings.Replace(string(csr), "\n", "\\n", -1)
-	response, e2 := that.AddCertificationWithAppId(string(csrStr), certTypeName, appidid, name)
-	if e2 != nil {
+	response := that.AddCertificationWithAppId(csrStr, certTypeName, appidid, name)
+	if response.HasError() {
 		ee := os.RemoveAll(tempDir)
 		if ee != nil {
 			log.Infof("remove fail %s", ee.Error())
 		}
-		return "", e2
+		return "", response.Error
 	}
-	tempDir2 := fmt.Sprintf("%s/%s", certRoot, response.Id)
+
+	var certResponse map[string]any
+	json.Unmarshal(response.Body, &certResponse)
+	var responseData = certResponse["data"].(map[string]any)
+	var responseAttributes = responseData["attributes"].(map[string]any)
+	var responseId = responseData["id"].(string)
+	var certificateContent = responseAttributes["certificateContent"].(string)
+	var expirationDate = responseAttributes["expirationDate"].(time.Time) //ExpirationDate       time.Time   `json:"expirationDate"`
+
+	tempDir2 := fmt.Sprintf("%s/%s", certRoot, responseId)
 	os.Rename(tempDir, tempDir2)
 	tempDir = tempDir2
-	util.WriteAppleCertContentToFile(response.Attributes.CertificateContent, path.Join(tempDir, "cert.pem"))
+	util.WriteAppleCertContentToFile(certificateContent, path.Join(tempDir, "cert.pem"))
 	_, e4 := util.WriteP12File(path.Join(tempDir, "pri.pem"), path.Join(tempDir, "cert.pem"), path.Join(tempDir, "cert.p12"), password)
 	if e4 != nil {
 		return "", errorz.NewInternalError(e4.Error())
@@ -414,8 +431,7 @@ func AddCertEasy(that *ItcApiV3, certRoot string, email string, name string, pas
 		return "", errorz.NewInternalError(e.Error())
 	}
 	if saveAu {
-		appuploaderapi.NewClient().UploadCert(email, response.Id, response.Attributes.ExpirationDate, p12Data)
+		appuploader.NewClient().UploadCert(email, responseId, expirationDate, p12Data)
 	}
 	return path.Join(tempDir, "cert.p12"), nil
 }
-*/
