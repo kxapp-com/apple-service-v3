@@ -1,9 +1,9 @@
 package manager
 
 import (
-	"github.com/appuploader/apple-service-v3/base"
-	"github.com/appuploader/apple-service-v3/idmsa"
-	"github.com/appuploader/apple-service-v3/xcode"
+	"github.com/kxapp-com/apple-service-v3/base"
+	"github.com/kxapp-com/apple-service-v3/idmsa"
+	"github.com/kxapp-com/apple-service-v3/xcode"
 	"sync"
 )
 

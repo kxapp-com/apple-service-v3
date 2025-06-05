@@ -3,13 +3,13 @@ package xcode
 import (
 	"errors"
 	"fmt"
+	"github.com/kxapp-com/apple-service-v3/appuploader"
+	"github.com/kxapp-com/apple-service-v3/storage"
+	"github.com/kxapp-com/apple-service-v3/xcode/gsa"
 	"maps"
 	"net/http"
 
 	"gitee.com/kxapp/kxapp-common/httpz"
-	"github.com/appuploader/apple-service-v3/appuploader"
-	"github.com/appuploader/apple-service-v3/storage"
-	"github.com/appuploader/apple-service-v3/xcode/gsa"
 
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"

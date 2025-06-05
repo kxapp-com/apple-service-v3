@@ -1,11 +1,10 @@
 package manager
 
 import (
+	"github.com/kxapp-com/apple-service-v3/base"
+	"github.com/kxapp-com/apple-service-v3/idmsa"
+	"github.com/kxapp-com/apple-service-v3/xcode"
 	"sync"
-
-	"github.com/appuploader/apple-service-v3/base"
-	"github.com/appuploader/apple-service-v3/idmsa"
-	"github.com/appuploader/apple-service-v3/xcode"
 )
 
 type AuthClientManager struct {

@@ -2,14 +2,14 @@ package idmsa
 
 import (
 	"fmt"
+	"github.com/kxapp-com/apple-service-v3/base"
+	"github.com/kxapp-com/apple-service-v3/storage"
 	"io"
 	"net/http"
 	"strings"
 
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"gitee.com/kxapp/kxapp-common/httpz/cookiejar"
-	"github.com/appuploader/apple-service-v3/base"
-	"github.com/appuploader/apple-service-v3/storage"
 )
 
 // DevClient 实现了 AppleClient 接口

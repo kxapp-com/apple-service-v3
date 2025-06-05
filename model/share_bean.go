@@ -1,4 +1,4 @@
-package beans
+package model
 
 import "time"
 

@@ -1,4 +1,4 @@
-package beans
+package model
 
 const VerifyCodeMode_SMS = "sms"
 const VerifyCodeMode_Voice = "voice"

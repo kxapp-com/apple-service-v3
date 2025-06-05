@@ -3,21 +3,21 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
-	fastlang "github.com/appuploader/apple-service-v3/idmsa"
-	beans "github.com/appuploader/apple-service-v3/model"
+	"github.com/kxapp-com/apple-service-v3/idmsa"
+	beans "github.com/kxapp-com/apple-service-v3/model"
 	"time"
 )
 
 func main() {
 
 	account := "yanwen1688@gmail.com"
-	api := fastlang.NewDevClient(account)
+	api := idmsa.NewDevClient(account)
 	if api.IsSessionAlive() {
 		fmt.Printf("session is alive for account %s\n", account)
 		onSuccess(account)
 		return
 	}
-	client := fastlang.NewDevAuthClient()
+	client := idmsa.NewDevAuthClient()
 	r := client.Login(account, "MzdJzm38")
 	//r := client.Login(xcode.AuthInfo{Email: "yanwen1688@gmail.com", Password: "MzdJzm38"})
 	//r := client.Login(xcode.AuthInfo{Email: "tanghuang1989@qq.com", Password: "MzdJzm38"})
@@ -104,7 +104,7 @@ func main() {
 	time.Sleep(time.Minute * 5)
 }
 func onSuccess(account string) {
-	a := fastlang.NewDevClient(account)
+	a := idmsa.NewDevClient(account)
 	t := a.GetTeams()
 	//t := a.GetItcTeams()
 	fmt.Printf("get itc teams %+v %v\n", string(t.Body), t.Status)
