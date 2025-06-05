@@ -5,7 +5,7 @@ import (
 	"gitee.com/kxapp/kxapp-common/errorz"
 	"gitee.com/kxapp/kxapp-common/httpz"
 	beans "github.com/appuploader/apple-service-v3/model"
-	xcode "github.com/appuploader/apple-service-v3/xcodeauth"
+	xcode "github.com/appuploader/apple-service-v3/xcode"
 
 	//"github.com/appuploader/apple-service-v3/xcode"
 	"time"

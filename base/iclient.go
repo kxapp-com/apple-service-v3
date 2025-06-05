@@ -1,4 +1,4 @@
-package itcbase
+package base
 
 import "gitee.com/kxapp/kxapp-common/httpz"
 

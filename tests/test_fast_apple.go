@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"gitee.com/kxapp/kxapp-common/errorz"
-	fastlang "github.com/appuploader/apple-service-v3/idmsaauth"
+	fastlang "github.com/appuploader/apple-service-v3/idmsa"
 	beans "github.com/appuploader/apple-service-v3/model"
 	"time"
 )

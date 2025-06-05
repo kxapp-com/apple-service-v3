@@ -1,4 +1,4 @@
-package fastlang
+package idmsa
 
 import (
 	"encoding/base64"

@@ -9,7 +9,7 @@ import (
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
 	"github.com/appuploader/apple-service-v3/storage"
-	"github.com/appuploader/apple-service-v3/xcodeauth/gsa"
+	"github.com/appuploader/apple-service-v3/xcode/gsa"
 
 	log "github.com/sirupsen/logrus"
 	"howett.net/plist"

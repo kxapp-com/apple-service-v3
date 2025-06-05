@@ -1,4 +1,4 @@
-package fastlang
+package idmsa
 
 // HTTP Headers
 const (

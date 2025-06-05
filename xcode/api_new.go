@@ -9,7 +9,7 @@ import (
 
 	"gitee.com/kxapp/kxapp-common/httpz"
 	"github.com/appuploader/apple-service-v3/appuploader"
-	"github.com/appuploader/apple-service-v3/itcbase"
+	"github.com/appuploader/apple-service-v3/base"
 	"github.com/appuploader/apple-service-v3/storage"
 	"github.com/google/uuid"
 	"howett.net/plist"
@@ -52,7 +52,7 @@ func (client *XcodeClient) GetTeams() *httpz.HttpResponse {
 	return client.postXcode("listTeams.action")
 }
 
-func (client *XcodeClient) GetApiV3() *itcbase.ItcApiV3 {
+func (client *XcodeClient) GetApiV3() *base.ItcApiV3 {
 	header := map[string]string{
 		"User-Agent":       httpz.UserAgent_XCode_Simple,
 		"Accept":           "application/vnd.api+json, application/json, text/plain, */*",
@@ -69,7 +69,7 @@ func (client *XcodeClient) GetApiV3() *itcbase.ItcApiV3 {
 		header["DSESSIONID"] = client.xcodeSessionID
 	}
 	maps.Copy(header, client.anisseteData.ToMap())
-	return &itcbase.ItcApiV3{
+	return &base.ItcApiV3{
 		HttpClient:      client.httpClient,
 		ServiceURL:      "https://developerservices2.apple.com/services/v1/",
 		JsonHttpHeaders: header,
